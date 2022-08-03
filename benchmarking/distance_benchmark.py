@@ -1,5 +1,14 @@
 def run_image_vs_image_experiment(case, config):
-    pass
+    match case:
+        case 'bee_vs_fly':
+            input_image_path = 'data/images/bee.jpg'
+            reference_image_path = 'data/images/fly.jpg'
+            model = ImageNetModel()
+
+
+
+
+
 
 
 def run_image_captioning_experiment(case, config):
