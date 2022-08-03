@@ -1,0 +1,60 @@
+# Explainable embedded spaces paper
+
+- Multiple combinations of two data items:
+    - Close/related classes
+        - bee vs fly
+        - car vs bike
+    - “Opposite” items (that have nothing in common)
+        - Flower vs car
+    - Same class
+        - labradoodles
+    - Multiple classes per image
+        - Dog and car vs dog and vs car
+    - Multiple models
+        - We already used Imagenet a lot
+        - Something with an actual embedded space, like image captioning
+            - Platalea?
+            - Hugging Face
+                - [https://huggingface.co/nlpconnect/vit-gpt2-image-captioning](https://huggingface.co/nlpconnect/vit-gpt2-image-captioning)
+            - Multiple modalities(?)
+                - Images
+                - Text?
+                    - Seems viable
+                - Molecules: SMILES or graphs?
+                    - May need more effort to get a grip on how this type of data works, perhaps with help of Aron and Leon it will go faster.
+
+We should build the above into a automatically runnable benchmark set. That can then be used to analyse/justify the following stuff. Also avoids notebook-hell.
+
+- Analysis
+    - Look at other mask selections; see if results make sense, logically
+        - Nu zien we bijvoorbeeld die bij vs de vlieg dat 1 deel vliegig is en 1 deel anti-vliegig, maar waar zien we de “irrelevante” delen, de niet-bij/niet-vlieg delen? Kunnen we die ook met bijvoorbeeld een “1-afstand” afstand visualiseren?
+        - The inverse of the ±20% we now keep; 1 – 20%
+        - best 10% (this is what we do now)
+        - worst 10%
+        - random selection
+        - all
+            - “This sucks, so we need filtering”
+        - What is in the filtered out masks?
+            - Is it exactly the inverse of the explainer? Or completely noise? Or or or.
+            - Does it show “irrelevant” parts or “anti” parts?
+        - Question: what is good performance for explainable AI? Quantifiable?
+            - Check literature
+            - Ask Elena & MLSIG
+        - Jisk worries about whether the “assumption of linearity” is well supported: let him preview the paper
+        - Parameter tuning/stability analysis
+            - Percentage
+                - We did an initial visual inspection, but could be more rigorous
+            - Number of masks
+                - Can we autotune?
+            - P-keep
+                - Can we again autotune this?
+            - Num-features
+        - Algorithmic choices justification
+            - RISE as a basis
+                - Random masking -> combine different parts of image that together mean something, instead of isolating every pixel and losing (combined) meaning.
+            - Cosine distance
+                - Alternatives?
+            - Percentage vs exponential distance weight power
+            - Weight = 1 / exp of (distance / 2)
+                - Keeps cosine distance (which is in range [0, 2]), divided by 2, within range [0, 1] for mask weights.
+                    - **Need to look into how this affects the full range of weight values! Range = [1/exp(1), 1/exp(0)] = [0.4, 1]**
