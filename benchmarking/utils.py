@@ -1,3 +1,10 @@
+from matplotlib import pyplot as plt
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
+from tensorflow.keras import backend as keras_backend
+import numpy as np
+
+
 def load_img(path, target_size):
     img = image.load_img(path, target_size=target_size)
     x = image.img_to_array(img)
@@ -6,14 +13,40 @@ def load_img(path, target_size):
     return img, x
 
 
-class ImageNetModel():
+class ImageNetModel:
     def __init__(self):
-        K.set_learning_phase(0)
+        keras_backend.set_learning_phase(0)
         self.model = ResNet50()
         self.input_size = (224, 224)
 
     def run_on_batch(self, x):
         return self.model.predict(x)
 
+
 def class_name(idx):
     return decode_predictions(np.eye(1, 1000, idx))[0][0][1]
+
+
+def plot_saliency_map_on_image(image, saliency, ax=None, vmin=None, vmax=None, title="Explanation",
+                               do_cbar=True, add_value_limits_to_title=False, **kwargs):
+    if ax is None:
+        fig, ax = plt.subplots(1, 1)
+    else:
+        fig = ax.get_figure()
+    if add_value_limits_to_title:
+        if vmin is None:
+            vmin_title = saliency.min()
+        else:
+            vmin_title = vmin
+        if vmax is None:
+            vmax_title = saliency.max()
+        else:
+            vmax_title = vmax
+        title = f"{title} vmin = {vmin_title:.2f}, vmax = {vmax_title:.2f}"
+    ax.set_title(title)
+    ax.axis('off')
+    ax.imshow(image)
+    im = ax.imshow(saliency, cmap='jet', alpha=0.5, vmin=vmin, vmax=vmax)
+    if do_cbar:
+        plt.colorbar(im, ax=ax)
+    return fig
