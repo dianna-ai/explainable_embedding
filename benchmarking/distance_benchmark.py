@@ -5,7 +5,7 @@ from typing import Union, Optional, Iterable
 import dianna
 from matplotlib import pyplot as plt
 
-from benchmarking.utils import ImageNetModel, load_img, plot_saliency_map_on_image
+from utils import ImageNetModel, load_img, plot_saliency_map_on_image
 
 
 @dataclass
