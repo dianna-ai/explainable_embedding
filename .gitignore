@@ -1,0 +1,38 @@
+*.py[cod]
+*.egg-info
+*.eggs
+.ipynb_checkpoints
+.pytorch
+
+build
+dist
+.cache
+__pycache__
+
+# testing
+htmlcov
+.coverage
+coverage.xml
+.pytest_cache
+.tox
+*word_vectors.txt.pt
+
+docs/_build
+
+# ide
+.idea
+.eclipse
+.vscode
+
+# Mac
+.DS_Store
+
+# virtual environments
+env
+env3
+venv
+venv3
+
+.python-version
+
+output/**
