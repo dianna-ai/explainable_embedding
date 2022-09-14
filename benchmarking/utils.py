@@ -20,7 +20,7 @@ class ImageNetModel:
         self.input_size = (224, 224)
 
     def run_on_batch(self, x):
-        return self.model.predict(x)
+        return self.model.predict(x, verbose=0)
 
 
 def class_name(idx):
@@ -28,7 +28,7 @@ def class_name(idx):
 
 
 def plot_saliency_map_on_image(image, saliency, ax=None, vmin=None, vmax=None, title="Explanation",
-                               do_cbar=True, add_value_limits_to_title=False, **kwargs):
+                               do_cbar=True, add_value_limits_to_title=False, central_value=None, **kwargs):
     if ax is None:
         fig, ax = plt.subplots(1, 1)
     else:
@@ -46,7 +46,18 @@ def plot_saliency_map_on_image(image, saliency, ax=None, vmin=None, vmax=None, t
     ax.set_title(title)
     ax.axis('off')
     ax.imshow(image)
-    im = ax.imshow(saliency, cmap='jet', alpha=0.5, vmin=vmin, vmax=vmax)
+    cmap = plt.cm.get_cmap('bwr', 9)
+
+    if central_value is not None:
+        assert vmin is not None, 'central value and vmin combination unsupported'
+        assert vmax is not None, 'central value and vmax combination unsupported'
+
+        radius = max(central_value - vmin, vmax - central_value)
+        vmin = central_value - radius
+        vmax = central_value + radius
+
+
+    im = ax.imshow(saliency, cmap=cmap, alpha=0.5, vmin=vmin, vmax=vmax)
     if do_cbar:
         plt.colorbar(im, ax=ax)
     return fig
