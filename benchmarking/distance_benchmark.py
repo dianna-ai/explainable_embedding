@@ -7,6 +7,7 @@ from typing import Union, Optional, Iterable
 import PIL.Image
 import dataconf
 import dianna
+import numpy as np
 import torch
 import yaml
 from PIL.Image import Image
@@ -23,6 +24,8 @@ class Config:
     mask_selection_method: str
     mask_selection_range_min: Iterable[int]
     mask_selection_range_max: Iterable[int]
+    mask_selection_negative_range_min: Iterable[int]
+    mask_selection_negative_range_max: Iterable[int]
     mask_distance_power: float
     weight_range_normalization: bool
     distance_metric: str
@@ -79,6 +82,8 @@ def explain_and_plot_image_vs_image_to_ax(input_image_file_name, reference_image
                                                             embedded_reference,
                                                             mask_selection_range_max=config.mask_selection_range_max,
                                                             mask_selection_range_min=config.mask_selection_range_min,
+                                                            mask_selection_negative_range_max=config.mask_selection_negative_range_max,
+                                                            mask_selection_negative_range_min=config.mask_selection_negative_range_min,
                                                             n_masks=config.number_of_masks,
                                                             axis_labels={2: 'channels'})
     plot_saliency_map_on_image(input_image, saliency[0], ax=ax, title=title,
@@ -145,11 +150,14 @@ def run_image_captioning_experiment(case, config: Config, output_folder: Path):
                                                             embedded_reference,
                                                             mask_selection_range_max=config.mask_selection_range_max,
                                                             mask_selection_range_min=config.mask_selection_range_min,
+                                                            mask_selection_negative_range_max=config.mask_selection_negative_range_max,
+                                                            mask_selection_negative_range_min=config.mask_selection_negative_range_min,
                                                             n_masks=config.number_of_masks,
                                                             axis_labels={1: 'channels'},
                                                             preprocess_function=lambda x: [
                                                                 preprocess(PIL.Image.fromarray(e)) for e in x])
 
+    np.save(output_folder / (case + '_saliency.npy'), saliency)
     plot_saliency_map_on_image(input_image, saliency[0], ax=ax, title=title,
                                add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
                                central_value=central_value)
@@ -167,6 +175,7 @@ def run_benchmark(config, run_uid=None):
         yaml.dump(config, file)
 
     imagenet_cases = ['bee_vs_fly', 'labradoodles', 'dogcar_vs_car', 'dogcar_vs_dog', 'flower_vs_car', 'car_vs_bike']
+    imagenet_cases = []
     for imagenet_case in imagenet_cases:
         run_image_vs_image_experiment(imagenet_case, config, run_uid)
 
@@ -181,6 +190,8 @@ def run_benchmark(config, run_uid=None):
                               'flower_vs_car',
                               'car_vs_bicycle', ]
 
+    image_captioning_cases = ['bee image wrt a bee']
+
     for case in image_captioning_cases:
         run_image_captioning_experiment(case, config, output_folder)
 
@@ -191,12 +202,14 @@ original_config_options = Config(
     experiment_name='tune_percentages',
     mask_selection_method='',  # range, random, all
     mask_selection_range_min=0,  # 0-1
-    mask_selection_range_max=0.2,  # 0-1
+    mask_selection_range_max=0.1,  # 0-1
+    mask_selection_negative_range_min=0.9,  # 0-1
+    mask_selection_negative_range_max=1,  # 0-1
     mask_distance_power=1,  # 0.5, 1, 2 ... 100
     # Normalize weights to [0, 1] before taking dot product with masks.
     weight_range_normalization=False,  # True, False
     distance_metric='cosine',  # cosine, euclidian, manhatten?
-    number_of_masks=2000,  # auto, [1, -> ]
+    number_of_masks=1000,  # auto, [1, -> ]
     p_keep=0.5,  # None (auto), 0 - 1
     feature_res=8,  # [1, ->]
 )
