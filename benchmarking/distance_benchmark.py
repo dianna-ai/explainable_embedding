@@ -1,37 +1,17 @@
 import dataclasses
 import time
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Union, Optional, Iterable
 
 import PIL.Image
-import dataconf
+import clip
 import dianna
 import numpy as np
 import torch
 import yaml
-from PIL.Image import Image
-from dianna import utils
 from matplotlib import pyplot as plt
-import clip
 
+from benchmarking.distance_benchmark_configs import original_config_options
 from utils import ImageNetModel, load_img, plot_saliency_map_on_image
-
-
-@dataclass
-class Config:
-    experiment_name: str
-    mask_selection_method: str
-    mask_selection_range_min: float
-    mask_selection_range_max: float
-    mask_selection_negative_range_min: float
-    mask_selection_negative_range_max: float
-    mask_distance_power: float
-    weight_range_normalization: bool
-    distance_metric: str
-    number_of_masks: Union[str, int]
-    p_keep: Optional[float]
-    feature_res: int
 
 
 def run_image_vs_image_experiment(case, config: Config, output_folder: Path):
@@ -198,26 +178,9 @@ def run_benchmark(config, run_uid=None):
     # something with molecules?
 
 
-original_config_options = Config(
-    experiment_name='tune_percentages',
-    mask_selection_method='',  # range, random, all
-    mask_selection_range_min=0,  # 0-1
-    mask_selection_range_max=0.1,  # 0-1
-    mask_selection_negative_range_min=0.9,  # 0-1
-    mask_selection_negative_range_max=1,  # 0-1
-    mask_distance_power=1,  # 0.5, 1, 2 ... 100
-    # Normalize weights to [0, 1] before taking dot product with masks.
-    weight_range_normalization=False,  # True, False
-    distance_metric='cosine',  # cosine, euclidian, manhatten?
-    number_of_masks=1000,  # auto, [1, -> ]
-    p_keep=0.5,  # None (auto), 0 - 1
-    feature_res=8,  # [1, ->]
-)
 
-furthest_masks_config_options = dataclasses.replace(original_config_options,
-                                                    mask_selection_range_min=.8,
-                                                    mask_selection_range_max=1,
-                                                    )
+
+
 
 run_benchmark(original_config_options)
 # run_benchmark(furthest_masks_config_options)
