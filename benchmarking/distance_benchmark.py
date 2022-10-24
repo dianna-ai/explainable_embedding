@@ -22,10 +22,10 @@ from utils import ImageNetModel, load_img, plot_saliency_map_on_image
 class Config:
     experiment_name: str
     mask_selection_method: str
-    mask_selection_range_min: Iterable[int]
-    mask_selection_range_max: Iterable[int]
-    mask_selection_negative_range_min: Iterable[int]
-    mask_selection_negative_range_max: Iterable[int]
+    mask_selection_range_min: float
+    mask_selection_range_max: float
+    mask_selection_negative_range_min: float
+    mask_selection_negative_range_max: float
     mask_distance_power: float
     weight_range_normalization: bool
     distance_metric: str
