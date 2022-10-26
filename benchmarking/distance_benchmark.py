@@ -3,7 +3,6 @@ from pathlib import Path
 
 import PIL.Image
 import clip
-import dianna
 import numpy as np
 import torch
 import yaml
@@ -15,11 +14,6 @@ from utils import ImageNetModel, load_img, plot_saliency_map_on_image, set_all_t
 
 
 def run_image_vs_image_experiment(case, config: Config, output_folder: Path):
-    set_all_the_seeds(config.random_seed)
-    model = ImageNetModel()
-
-    fig, ax = plt.subplots(1, 1)
-
     match case:
         case 'bee_vs_fly':
             input_image_file_name = 'bee.jpg'
@@ -41,27 +35,33 @@ def run_image_vs_image_experiment(case, config: Config, output_folder: Path):
             reference_image_file_name = 'bike.jpg'
         case _:
             print(f"{case} is not a valid case in this experiment.")
+
+    model = ImageNetModel()
+
     input_image_path = Path(__file__).parent.parent / 'data/images/' / input_image_file_name
     reference_image_path = Path(__file__).parent.parent / 'data/images/' / reference_image_file_name
-    image, input_arr = load_img(input_image_path, model.input_size)
+    input_image, input_arr = load_img(input_image_path, model.input_size)
     reference_image_file_name, reference_arr = load_img(reference_image_path, model.input_size)
     embedded_reference = model.run_on_batch(reference_arr)
+
+    run_and_analyse_explainer(case, config, embedded_reference, input_arr, input_image, model, output_folder)
+
+
+def run_and_analyse_explainer(case, config, embedded_reference, input_arr, input_image, model, output_folder,
+                              preprocess_function=None):
+    set_all_the_seeds(config.random_seed)
     explainer = DistanceExplainer(mask_selection_range_max=config.mask_selection_range_max,
                                   mask_selection_range_min=config.mask_selection_range_min,
                                   mask_selection_negative_range_max=config.mask_selection_negative_range_max,
                                   mask_selection_negative_range_min=config.mask_selection_negative_range_min,
                                   n_masks=config.number_of_masks,
-                                  axis_labels={2: 'channels'})
+                                  axis_labels={2: 'channels'},
+                                  preprocess_function=preprocess_function)
     saliency, value = explainer.explain_image_distance(model.run_on_batch, input_arr[0], embedded_reference)
-
     central_value = value if config.manual_central_value is None else config.manual_central_value
-
-    plot_saliency_and_save_npy(saliency, central_value, image, ax, case, config, output_folder)
-
-
-def plot_saliency_and_save_npy(saliency, central_value, image, ax, case, config, output_folder):
+    fig, ax = plt.subplots(1, 1)
     np.save(output_folder / (case + '_saliency.npy'), saliency)
-    plot_saliency_map_on_image(image, saliency[0], ax=ax,
+    plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
                                title=f'{case} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
                                add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
                                central_value=central_value)
@@ -69,9 +69,6 @@ def plot_saliency_and_save_npy(saliency, central_value, image, ax, case, config,
 
 
 def run_image_captioning_experiment(case, config: Config, output_folder: Path):
-    fig, ax = plt.subplots(1, 1)
-    set_all_the_seeds(config.random_seed)
-
     match case:
         case 'bee image wrt a bee sitting on a flower':
             input_image_file_name = 'bee.jpg'
@@ -109,30 +106,14 @@ def run_image_captioning_experiment(case, config: Config, output_folder: Path):
     # See first example at https://github.com/openai/CLIP#usage
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load("ViT-B/32", device=device)
+
     input_image_path = Path(__file__).parent.parent / 'data/images/' / input_image_file_name
     input_image, input_arr = load_img(input_image_path, (224, 224))
     text = clip.tokenize([caption]).to(device)
     embedded_reference = model.encode_text(text).detach().numpy()
 
-    def runner_function(x):
-        lst = []
-        for e in x:
-            e = e[None, :]
-            lst.append(model.encode_image(e).detach().numpy()[0])
-        return lst
-
-    explainer = DistanceExplainer(mask_selection_range_max=config.mask_selection_range_max,
-                                  mask_selection_range_min=config.mask_selection_range_min,
-                                  mask_selection_negative_range_max=config.mask_selection_negative_range_max,
-                                  mask_selection_negative_range_min=config.mask_selection_negative_range_min,
-                                  n_masks=config.number_of_masks,
-                                  axis_labels={2: 'channels'},
-                                  preprocess_function=lambda x: [
-                                      preprocess(PIL.Image.fromarray(e)) for e in x]
-                                  )
-    saliency, value = explainer.explain_image_distance(model.run_on_batch, input_arr[0], embedded_reference)
-    central_value = value if config.manual_central_value is None else config.manual_central_value
-    plot_saliency_and_save_npy(saliency, central_value, input_image, ax, case, config, output_folder)
+    run_and_analyse_explainer(case, config, embedded_reference, input_arr, input_image, model, output_folder,
+                              preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e)) for e in x])
 
 
 def run_benchmark(config, run_uid=None):
