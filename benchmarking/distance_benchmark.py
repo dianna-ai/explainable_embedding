@@ -1,4 +1,3 @@
-import dataclasses
 import time
 from pathlib import Path
 
@@ -41,35 +40,30 @@ def run_image_vs_image_experiment(case, config: Config, output_folder: Path):
             reference_image_file_name = 'bike.jpg'
         case _:
             print(f"{case} is not a valid case in this experiment.")
-    explain_and_plot_image_vs_image_to_ax(input_image_file_name,
-                                          reference_image_file_name,
-                                          model,
-                                          config,
-                                          ax,
-                                          title=f'{case} {config.mask_selection_range_min} - {config.mask_selection_range_min}')
-
-    plt.savefig(output_folder / (case + '.png'))
-
-
-def explain_and_plot_image_vs_image_to_ax(input_image_file_name, reference_image_file_name, model, config, ax,
-                                          title: str):
     input_image_path = Path(__file__).parent.parent / 'data/images/' / input_image_file_name
     reference_image_path = Path(__file__).parent.parent / 'data/images/' / reference_image_file_name
-    input_image, input_arr = load_img(input_image_path, model.input_size)
+    image, input_arr = load_img(input_image_path, model.input_size)
     reference_image_file_name, reference_arr = load_img(reference_image_path, model.input_size)
     embedded_reference = model.run_on_batch(reference_arr)
+    saliency, value = dianna.explain_image_distance(model.run_on_batch, input_arr[0],
+                                                     embedded_reference,
+                                                     mask_selection_range_max=config.mask_selection_range_max,
+                                                     mask_selection_range_min=config.mask_selection_range_min,
+                                                     mask_selection_negative_range_max=config.mask_selection_negative_range_max,
+                                                     mask_selection_negative_range_min=config.mask_selection_negative_range_min,
+                                                     n_masks=config.number_of_masks,
+                                                     axis_labels={2: 'channels'})
 
-    saliency, central_value = dianna.explain_image_distance(model.run_on_batch, input_arr[0],
-                                                            embedded_reference,
-                                                            mask_selection_range_max=config.mask_selection_range_max,
-                                                            mask_selection_range_min=config.mask_selection_range_min,
-                                                            mask_selection_negative_range_max=config.mask_selection_negative_range_max,
-                                                            mask_selection_negative_range_min=config.mask_selection_negative_range_min,
-                                                            n_masks=config.number_of_masks,
-                                                            axis_labels={2: 'channels'})
-    plot_saliency_map_on_image(input_image, saliency[0], ax=ax, title=title,
+    plot_saliency_and_save_npy(saliency, value, image, ax, case, config, output_folder)
+
+
+def plot_saliency_and_save_npy(saliency, value, image, ax, case, config, output_folder):
+    np.save(output_folder / (case + '_saliency.npy'), saliency)
+    plot_saliency_map_on_image(image, saliency[0], ax=ax,
+                               title=f'{case} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
                                add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
-                               central_value=central_value)
+                               central_value=value)
+    plt.savefig(output_folder / (case + '.png'))
 
 
 def run_image_captioning_experiment(case, config: Config, output_folder: Path):
@@ -110,8 +104,6 @@ def run_image_captioning_experiment(case, config: Config, output_folder: Path):
         case _:
             print(f"{case} is not a valid case in this experiment.")
 
-    title = f'{case} {config.mask_selection_range_min} - {config.mask_selection_range_min}'
-
     # See first example at https://github.com/openai/CLIP#usage
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load("ViT-B/32", device=device)
@@ -139,12 +131,7 @@ def run_image_captioning_experiment(case, config: Config, output_folder: Path):
                                                             preprocess_function=lambda x: [
                                                                 preprocess(PIL.Image.fromarray(e)) for e in x])
 
-    np.save(output_folder / (case + '_saliency.npy'), saliency)
-    plot_saliency_map_on_image(input_image, saliency[0], ax=ax, title=title,
-                               add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
-                               central_value=central_value)
-
-    plt.savefig(output_folder / (case + '.png'))
+    plot_saliency_and_save_npy(saliency, central_value, input_image, ax, case, config, output_folder)
 
 
 def run_benchmark(config, run_uid=None):
