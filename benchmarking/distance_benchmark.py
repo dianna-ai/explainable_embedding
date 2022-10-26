@@ -13,7 +13,7 @@ import yaml
 from dianna.methods.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
-from benchmarking.Config import Config, original_config_options
+from Config import Config, original_config_options
 from utils import ImageNetModel, load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -33,7 +33,7 @@ def run_image_vs_image_experiment(case: ImageVsImageCase, config: Config, output
     reference_image_file_name, reference_arr = load_img(reference_image_path, model.input_size)
     embedded_reference = model.run_on_batch(reference_arr)
 
-    run_and_analyse_explainer(case.name, config, embedded_reference, input_arr, input_image, model, output_folder)
+    run_and_analyse_explainer('image_vs_image_' + case.name, config, embedded_reference, input_arr[0], input_image, model.run_on_batch, output_folder)
 
 
 @dataclass
@@ -53,12 +53,31 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
     text = clip.tokenize([case.caption]).to(device)
     embedded_reference = model.encode_text(text).detach().numpy()
 
-    run_and_analyse_explainer(case.name, config, embedded_reference, input_arr, input_image, model, output_folder,
+    def runner_function(x):
+        lst = []
+        for e in x:
+            e = e[None, :]
+            lst.append(model.encode_image(e).detach().numpy()[0])
+        return lst
+
+    run_and_analyse_explainer('image_vs_caption_' + case.name, config, embedded_reference, input_image, input_image, runner_function, output_folder,
                               preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e)) for e in x])
 
 
 def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, input_image, model, output_folder,
                               preprocess_function=None):
+    """
+
+    :param case_name:
+    :param config:
+    :param embedded_reference:
+    :param input_arr: first argument to the model
+    :param input_image:
+    :param model: model or function
+    :param output_folder:
+    :param preprocess_function:
+    :return:
+    """
     set_all_the_seeds(config.random_seed)
 
     start_time = time.time()
@@ -71,12 +90,12 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
                                   preprocess_function=preprocess_function)
     elapsed_time = time.time() - start_time
     with open(output_folder / f'{case_name}_elapsed_seconds.txt', 'w') as fh:
-        fh.write(elapsed_time)
+        fh.write(str(elapsed_time))
 
-    saliency, value = explainer.explain_image_distance(model.run_on_batch, input_arr[0], embedded_reference)
+    saliency, value = explainer.explain_image_distance(model, input_arr, embedded_reference)
     central_value = value if config.manual_central_value is None else config.manual_central_value
-    np.save(output_folder / (case_name + '_masks.npy', explainer.masks))
-    np.save(output_folder / (case_name + '_predictions.npy', explainer.predictions))
+    np.save(output_folder / (case_name + '_masks.npy'), explainer.masks)
+    np.save(output_folder / (case_name + '_predictions.npy'), explainer.predictions)
     np.save(output_folder / (case_name + '_saliency.npy'), saliency)
     fig, ax = plt.subplots(1, 1)
     plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
@@ -125,7 +144,7 @@ def run_benchmark(config, run_uid=None):
                                        reference_image_file_name='bike.jpg')]
     # imagenet_cases = []
     for imagenet_case in imagenet_cases:
-        run_image_vs_image_experiment(imagenet_case, config, run_uid)
+        run_image_vs_image_experiment(imagenet_case, config, output_folder)
 
     image_captioning_cases = [
         ImageCaptioningCase(name='bee image wrt a bee sitting on a flower',

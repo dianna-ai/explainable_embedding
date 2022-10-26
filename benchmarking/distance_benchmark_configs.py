@@ -1,7 +1,7 @@
 import dataclasses
 from itertools import product
 
-from benchmarking.Config import original_config_options
+from Config import original_config_options
 
 furthest_masks_config_options = dataclasses.replace(original_config_options,
                                                     mask_selection_range_min=.8,

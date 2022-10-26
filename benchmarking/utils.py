@@ -1,5 +1,5 @@
 import os
-from random import random
+import random
 
 import tensorflow as tf
 from matplotlib import pyplot as plt
