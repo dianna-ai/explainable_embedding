@@ -7,6 +7,7 @@ import dianna
 import numpy as np
 import torch
 import yaml
+from dianna.methods.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from benchmarking.Config import Config, original_config_options
@@ -45,24 +46,25 @@ def run_image_vs_image_experiment(case, config: Config, output_folder: Path):
     image, input_arr = load_img(input_image_path, model.input_size)
     reference_image_file_name, reference_arr = load_img(reference_image_path, model.input_size)
     embedded_reference = model.run_on_batch(reference_arr)
-    saliency, value = dianna.explain_image_distance(model.run_on_batch, input_arr[0],
-                                                     embedded_reference,
-                                                     mask_selection_range_max=config.mask_selection_range_max,
-                                                     mask_selection_range_min=config.mask_selection_range_min,
-                                                     mask_selection_negative_range_max=config.mask_selection_negative_range_max,
-                                                     mask_selection_negative_range_min=config.mask_selection_negative_range_min,
-                                                     n_masks=config.number_of_masks,
-                                                     axis_labels={2: 'channels'})
+    explainer = DistanceExplainer(mask_selection_range_max=config.mask_selection_range_max,
+                                  mask_selection_range_min=config.mask_selection_range_min,
+                                  mask_selection_negative_range_max=config.mask_selection_negative_range_max,
+                                  mask_selection_negative_range_min=config.mask_selection_negative_range_min,
+                                  n_masks=config.number_of_masks,
+                                  axis_labels={2: 'channels'})
+    saliency, value = explainer.explain_image_distance(model.run_on_batch, input_arr[0], embedded_reference)
 
-    plot_saliency_and_save_npy(saliency, value, image, ax, case, config, output_folder)
+    central_value = value if config.manual_central_value is None else config.manual_central_value
+
+    plot_saliency_and_save_npy(saliency, central_value, image, ax, case, config, output_folder)
 
 
-def plot_saliency_and_save_npy(saliency, value, image, ax, case, config, output_folder):
+def plot_saliency_and_save_npy(saliency, central_value, image, ax, case, config, output_folder):
     np.save(output_folder / (case + '_saliency.npy'), saliency)
     plot_saliency_map_on_image(image, saliency[0], ax=ax,
                                title=f'{case} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
                                add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
-                               central_value=value)
+                               central_value=central_value)
     plt.savefig(output_folder / (case + '.png'))
 
 
@@ -119,18 +121,17 @@ def run_image_captioning_experiment(case, config: Config, output_folder: Path):
             lst.append(model.encode_image(e).detach().numpy()[0])
         return lst
 
-    saliency, central_value = dianna.explain_image_distance(runner_function,
-                                                            input_image,
-                                                            embedded_reference,
-                                                            mask_selection_range_max=config.mask_selection_range_max,
-                                                            mask_selection_range_min=config.mask_selection_range_min,
-                                                            mask_selection_negative_range_max=config.mask_selection_negative_range_max,
-                                                            mask_selection_negative_range_min=config.mask_selection_negative_range_min,
-                                                            n_masks=config.number_of_masks,
-                                                            axis_labels={1: 'channels'},
-                                                            preprocess_function=lambda x: [
-                                                                preprocess(PIL.Image.fromarray(e)) for e in x])
-
+    explainer = DistanceExplainer(mask_selection_range_max=config.mask_selection_range_max,
+                                  mask_selection_range_min=config.mask_selection_range_min,
+                                  mask_selection_negative_range_max=config.mask_selection_negative_range_max,
+                                  mask_selection_negative_range_min=config.mask_selection_negative_range_min,
+                                  n_masks=config.number_of_masks,
+                                  axis_labels={2: 'channels'},
+                                  preprocess_function=lambda x: [
+                                      preprocess(PIL.Image.fromarray(e)) for e in x]
+                                  )
+    saliency, value = explainer.explain_image_distance(model.run_on_batch, input_arr[0], embedded_reference)
+    central_value = value if config.manual_central_value is None else config.manual_central_value
     plot_saliency_and_save_npy(saliency, central_value, input_image, ax, case, config, output_folder)
 
 
@@ -165,10 +166,6 @@ def run_benchmark(config, run_uid=None):
         run_image_captioning_experiment(case, config, output_folder)
 
     # something with molecules?
-
-
-
-
 
 
 run_benchmark(original_config_options)

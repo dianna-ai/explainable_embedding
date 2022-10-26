@@ -17,6 +17,7 @@ class Config:
     p_keep: Optional[float]
     feature_res: int
     random_seed: int
+    manual_central_value: Optional[float]
 
 
 original_config_options = Config(
