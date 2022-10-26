@@ -66,8 +66,10 @@ def run_and_analyse_explainer(case, config, embedded_reference, input_arr, input
                                   preprocess_function=preprocess_function)
     saliency, value = explainer.explain_image_distance(model.run_on_batch, input_arr[0], embedded_reference)
     central_value = value if config.manual_central_value is None else config.manual_central_value
-    fig, ax = plt.subplots(1, 1)
+    np.save(output_folder / (case + '_masks.npy', explainer.masks))
+    np.save(output_folder / (case + '_predictions.npy', explainer.predictions))
     np.save(output_folder / (case + '_saliency.npy'), saliency)
+    fig, ax = plt.subplots(1, 1)
     plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
                                title=f'{case} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
                                add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
