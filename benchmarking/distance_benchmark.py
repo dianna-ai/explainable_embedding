@@ -10,11 +10,12 @@ import torch
 import yaml
 from matplotlib import pyplot as plt
 
-from benchmarking.distance_benchmark_configs import original_config_options
-from utils import ImageNetModel, load_img, plot_saliency_map_on_image
+from benchmarking.Config import Config, original_config_options
+from utils import ImageNetModel, load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
 def run_image_vs_image_experiment(case, config: Config, output_folder: Path):
+    set_all_the_seeds(config.random_seed)
     model = ImageNetModel()
 
     fig, ax = plt.subplots(1, 1)
@@ -73,6 +74,7 @@ def explain_and_plot_image_vs_image_to_ax(input_image_file_name, reference_image
 
 def run_image_captioning_experiment(case, config: Config, output_folder: Path):
     fig, ax = plt.subplots(1, 1)
+    set_all_the_seeds(config.random_seed)
 
     match case:
         case 'bee image wrt a bee sitting on a flower':

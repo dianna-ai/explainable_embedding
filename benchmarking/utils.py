@@ -1,3 +1,7 @@
+import os
+from random import random
+
+import tensorflow as tf
 from matplotlib import pyplot as plt
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
@@ -61,3 +65,18 @@ def plot_saliency_map_on_image(image, saliency, ax=None, vmin=None, vmax=None, t
     if do_cbar:
         plt.colorbar(im, ax=ax)
     return fig
+
+
+# from https://stackoverflow.com/a/52897216/1199693
+def set_all_the_seeds(seed_value=0):
+    os.environ['PYTHONHASHSEED']=str(seed_value)
+
+    random.seed(seed_value)
+
+    np.random.seed(seed_value)
+
+    tf.random.set_seed(seed_value)
+
+    session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+    sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
+    tf.compat.v1.keras.backend.set_session(sess)
