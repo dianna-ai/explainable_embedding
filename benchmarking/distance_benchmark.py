@@ -1,7 +1,10 @@
+import dataclasses
 import time
 from dataclasses import dataclass
 from pathlib import Path
 
+import dianna
+import git
 import PIL.Image
 import clip
 import numpy as np
@@ -83,6 +86,14 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
     plt.savefig(output_folder / (case_name + '.png'))
 
 
+def log_git_versions(output_folder):
+    explainable_embedding_sha = git.Repo(search_parent_directories=True).head.object.hexsha
+    dianna_sha = git.Repo(dianna.__path__[0], search_parent_directories=True).head.object.hexsha
+    with open(output_folder / 'git_commits.txt', 'w') as file:
+        file.write(f'explainable_embedding: {explainable_embedding_sha}')
+        file.write(f'dianna: {dianna_sha}')
+
+
 def run_benchmark(config, run_uid=None):
     if run_uid is None:
         run_uid = int(time.time())
@@ -91,6 +102,8 @@ def run_benchmark(config, run_uid=None):
     output_folder.mkdir(exist_ok=True, parents=True)
     with open(output_folder / 'config.yml', 'w') as file:
         yaml.dump(config, file)
+
+    log_git_versions(output_folder)
 
     imagenet_cases = [ImageVsImageCase(name='bee_vs_fly',
                                        input_image_file_name='bee.jpg',
@@ -152,5 +165,4 @@ def run_benchmark(config, run_uid=None):
     # something with molecules?
 
 
-run_benchmark(original_config_options)
-# run_benchmark(furthest_masks_config_options)
+run_benchmark(dataclasses.replace(original_config_options, number_of_masks=10))
