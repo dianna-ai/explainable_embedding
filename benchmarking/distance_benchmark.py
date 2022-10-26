@@ -54,9 +54,11 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
                               preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e)) for e in x])
 
 
-def run_and_analyse_explainer(case, config, embedded_reference, input_arr, input_image, model, output_folder,
+def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, input_image, model, output_folder,
                               preprocess_function=None):
     set_all_the_seeds(config.random_seed)
+
+    start_time = time.time()
     explainer = DistanceExplainer(mask_selection_range_max=config.mask_selection_range_max,
                                   mask_selection_range_min=config.mask_selection_range_min,
                                   mask_selection_negative_range_max=config.mask_selection_negative_range_max,
@@ -64,17 +66,21 @@ def run_and_analyse_explainer(case, config, embedded_reference, input_arr, input
                                   n_masks=config.number_of_masks,
                                   axis_labels={2: 'channels'},
                                   preprocess_function=preprocess_function)
+    elapsed_time = time.time() - start_time
+    with open(output_folder / f'{case_name}_elapsed_seconds.txt', 'w') as fh:
+        fh.write(elapsed_time)
+
     saliency, value = explainer.explain_image_distance(model.run_on_batch, input_arr[0], embedded_reference)
     central_value = value if config.manual_central_value is None else config.manual_central_value
-    np.save(output_folder / (case + '_masks.npy', explainer.masks))
-    np.save(output_folder / (case + '_predictions.npy', explainer.predictions))
-    np.save(output_folder / (case + '_saliency.npy'), saliency)
+    np.save(output_folder / (case_name + '_masks.npy', explainer.masks))
+    np.save(output_folder / (case_name + '_predictions.npy', explainer.predictions))
+    np.save(output_folder / (case_name + '_saliency.npy'), saliency)
     fig, ax = plt.subplots(1, 1)
     plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
-                               title=f'{case} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
+                               title=f'{case_name} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
                                add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
                                central_value=central_value)
-    plt.savefig(output_folder / (case + '.png'))
+    plt.savefig(output_folder / (case_name + '.png'))
 
 
 def run_benchmark(config, run_uid=None):
