@@ -1,19 +1,19 @@
-import dataclasses
 import time
 from dataclasses import dataclass
 from pathlib import Path
 
-import dianna
-import git
 import PIL.Image
 import clip
+import dianna
+import git
 import numpy as np
 import torch
 import yaml
 from dianna.methods.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
-from Config import Config, original_config_options
+from Config import Config
+from distance_benchmark_configs import test_config
 from utils import ImageNetModel, load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -88,15 +88,17 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
                                   n_masks=config.number_of_masks,
                                   axis_labels={2: 'channels'},
                                   preprocess_function=preprocess_function)
+    saliency, value = explainer.explain_image_distance(model, input_arr, embedded_reference)
     elapsed_time = time.time() - start_time
     with open(output_folder / 'elapsed_seconds.txt', 'w') as fh:
         fh.write(str(elapsed_time))
 
-    saliency, value = explainer.explain_image_distance(model, input_arr, embedded_reference)
     central_value = value if config.manual_central_value is None else config.manual_central_value
     np.save(output_folder / 'masks.npy', explainer.masks)
     np.save(output_folder / 'predictions.npy', explainer.predictions)
     np.save(output_folder / 'saliency.npy', saliency)
+    with open(output_folder / 'statistics.txt', 'w') as fh:
+        fh.write(explainer.statistics)
     fig, ax = plt.subplots(1, 1)
     plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
                                title=f'{case_name} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
@@ -108,9 +110,9 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
 def log_git_versions(output_folder):
     explainable_embedding_sha = git.Repo(search_parent_directories=True).head.object.hexsha
     dianna_sha = git.Repo(dianna.__path__[0], search_parent_directories=True).head.object.hexsha
-    with open(output_folder / 'git_commits.txt', 'w') as file:
-        file.write(f'explainable_embedding: {explainable_embedding_sha}')
-        file.write(f'dianna: {dianna_sha}')
+    with open(output_folder / 'git_commits.txt', 'w') as fh:
+        fh.write(f'explainable_embedding: {explainable_embedding_sha}')
+        fh.write(f'dianna: {dianna_sha}')
 
 
 def run_benchmark(config, run_uid=None):
@@ -188,4 +190,5 @@ def run_benchmark(config, run_uid=None):
     # something with molecules?
 
 
-run_benchmark(dataclasses.replace(original_config_options, number_of_masks=10))
+
+run_benchmark(test_config)

@@ -11,7 +11,7 @@ furthest_masks_config_options = dataclasses.replace(original_config_options,
 number_of_masks_configs = [dataclasses.replace(original_config_options,
                                                experiment_name=f'n_masks_sweep_{n_mask}_seed_{seed}',
                                                random_seed=seed,
-                                               n_masks=n_mask,
+                                               number_of_masks=n_mask,
                                                ) for n_mask, seed in
                            product([10, 50, 100, 200, 500, 1000, 2000, 5000], range(20))]
 
@@ -74,3 +74,5 @@ p_keep_configs = [dataclasses.replace(original_config_options,
                                       feature_res=feature_res
                                       ) for feature_res in
                   [1, 2, 4, 6, 8, 12, 16, 24, 32, 64, 128]]
+
+test_config = dataclasses.replace(original_config_options, number_of_masks=10, experiment_name='test')
