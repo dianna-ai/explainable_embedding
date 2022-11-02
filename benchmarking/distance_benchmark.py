@@ -1,8 +1,10 @@
 import time
 from dataclasses import dataclass
 from pathlib import Path
+import multiprocessing
 
 import PIL.Image
+import tensorflow
 import clip
 import dianna
 import git
@@ -51,13 +53,14 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
     input_image_path = Path(__file__).parent.parent / 'data/images/' / case.input_image_file_name
     input_image, input_arr = load_img(input_image_path, (224, 224))
     text = clip.tokenize([case.caption]).to(device)
-    embedded_reference = model.encode_text(text).detach().numpy()
+    embedded_reference = model.encode_text(text).detach().cpu().numpy()
 
     def runner_function(x):
         lst = []
         for e in x:
             e = e[None, :]
-            lst.append(model.encode_image(e).detach().numpy()[0])
+            e_tensor = torch.Tensor(e).to(device)
+            lst.append(model.encode_image(e_tensor).detach().cpu().numpy()[0])
         return lst
 
     run_and_analyse_explainer(case.name, config, embedded_reference, input_image, input_image, runner_function, output_folder,
@@ -109,10 +112,10 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
 
 def log_git_versions(output_folder):
     explainable_embedding_sha = git.Repo(search_parent_directories=True).head.object.hexsha
-    dianna_sha = git.Repo(dianna.__path__[0], search_parent_directories=True).head.object.hexsha
+    #dianna_sha = git.Repo(dianna.__path__[0], search_parent_directories=True).head.object.hexsha
     with open(output_folder / 'git_commits.txt', 'w') as fh:
         fh.write(f'explainable_embedding: {explainable_embedding_sha}')
-        fh.write(f'dianna: {dianna_sha}')
+        #fh.write(f'dianna: {dianna_sha}')
 
 
 def run_benchmark(config, run_uid=None):
@@ -148,7 +151,10 @@ def run_benchmark(config, run_uid=None):
     for imagenet_case in imagenet_cases:
         case_folder = output_folder / 'image_vs_image' / imagenet_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
-        run_image_vs_image_experiment(imagenet_case, config, case_folder)
+        process_eval = multiprocessing.Process(target=run_image_vs_image_experiment, args=(imagenet_case, config, case_folder))
+        #run_image_vs_image_experiment(imagenet_case, config, case_folder)
+        process_eval.start()
+        process_eval.join()
 
     image_captioning_cases = [
         ImageCaptioningCase(name='bee image wrt a bee sitting on a flower',
