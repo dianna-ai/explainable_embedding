@@ -4,19 +4,16 @@ from pathlib import Path
 import multiprocessing
 
 import PIL.Image
-import tensorflow
-import clip
 import dianna
 import git
 import numpy as np
-import torch
 import yaml
 from dianna.methods.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
 from distance_benchmark_configs import test_config
-from utils import ImageNetModel, load_img, plot_saliency_map_on_image, set_all_the_seeds
+from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
 @dataclass
@@ -27,6 +24,8 @@ class ImageVsImageCase:
 
 
 def run_image_vs_image_experiment(case: ImageVsImageCase, config: Config, output_folder: Path):
+    # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow 
+    from utils import ImageNetModel
     model = ImageNetModel()
 
     input_image_path = Path(__file__).parent.parent / 'data/images/' / case.input_image_file_name
@@ -46,6 +45,10 @@ class ImageCaptioningCase:
 
 
 def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, output_folder: Path):
+    import tensorflow  # necessary to make sure that when experiments with tensorflow are run in the same script as experiments with torch tensorflow is imported before torch; if you do it the other way around, things will crash
+    # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow 
+    import torch
+    import clip
     # See first example at https://github.com/openai/CLIP#usage
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load("ViT-B/32", device=device)
@@ -151,8 +154,8 @@ def run_benchmark(config, run_uid=None):
     for imagenet_case in imagenet_cases:
         case_folder = output_folder / 'image_vs_image' / imagenet_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
+        # we do this in a separate process because otherwise we can't get Tensorflow to give back the GPU memory for torch later on
         process_eval = multiprocessing.Process(target=run_image_vs_image_experiment, args=(imagenet_case, config, case_folder))
-        #run_image_vs_image_experiment(imagenet_case, config, case_folder)
         process_eval.start()
         process_eval.join()
 
