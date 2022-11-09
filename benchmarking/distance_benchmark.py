@@ -12,7 +12,7 @@ from dianna.methods.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import test_config
+from distance_benchmark_configs import runs_20221109
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -199,5 +199,8 @@ def run_benchmark(config, run_uid=None):
     # something with molecules?
 
 
+#run_benchmark(test_config)
 
-run_benchmark(test_config)
+for run_config in runs_20221109:
+    run_benchmark(run_config)
+
