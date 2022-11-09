@@ -84,6 +84,8 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
     :param preprocess_function:
     :return:
     """
+    print(f"running explainer for case {case_name} with config:")
+    print(config)
     set_all_the_seeds(config.random_seed)
 
     start_time = time.time()
@@ -100,7 +102,7 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
         fh.write(str(elapsed_time))
 
     central_value = value if config.manual_central_value is None else config.manual_central_value
-    np.save(output_folder / 'masks.npy', explainer.masks)
+    np.save(output_folder / 'masks_first_ten.npy', explainer.masks[:10])
     np.save(output_folder / 'predictions.npy', explainer.predictions)
     np.save(output_folder / 'saliency.npy', saliency)
     with open(output_folder / 'statistics.txt', 'w') as fh:
@@ -194,12 +196,16 @@ def run_benchmark(config, run_uid=None):
     for image_captioning_case in image_captioning_cases:
         case_folder = output_folder / 'image_captioning' / image_captioning_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
-        run_image_captioning_experiment(image_captioning_case, config, case_folder)
+        # we do this in a separate process because otherwise we can't get Tensorflow to give back the GPU memory for torch later on (or vice versa? anyway, this works, hopefully)
+        process_eval = multiprocessing.Process(target=run_image_captioning_experiment, args=(image_captioning_case, config, case_folder))
+        process_eval.start()
+        process_eval.join()
 
     # something with molecules?
 
 
-#run_benchmark(test_config)
+#import dataclasses
+#run_benchmark(dataclasses.replace(test_config, number_of_masks=5000))
 
 for run_config in runs_20221109:
     run_benchmark(run_config)
