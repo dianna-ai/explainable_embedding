@@ -1,9 +1,12 @@
 from dataclasses import dataclass
 from typing import Union, Optional
 
+from dataclass_wizard import YAMLWizard
+from yaml.constructor import ConstructorError
+
 
 @dataclass
-class Config:
+class Config(YAMLWizard):
     experiment_name: str
     mask_selection_range_min: float
     mask_selection_range_max: float
@@ -14,6 +17,14 @@ class Config:
     feature_res: int
     random_seed: int
     manual_central_value: Optional[float]
+
+    @classmethod
+    def load(cls, path):
+        try:
+            return cls.from_yaml_file(path)
+        except ConstructorError as e:
+            with open(path, 'r') as f:
+                return cls.from_yaml('\n'.join(f.read().split('\n')[1:]))
 
 
 original_config_options = Config(

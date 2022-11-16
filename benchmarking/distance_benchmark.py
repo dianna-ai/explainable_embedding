@@ -8,7 +8,6 @@ import dianna
 import git
 import numpy as np
 import torch
-import yaml
 from dianna.methods.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
@@ -121,8 +120,7 @@ def run_benchmark(config, run_uid=None):
 
     output_folder = Path('output') / f'{config.experiment_name}_{run_uid}'
     output_folder.mkdir(exist_ok=True, parents=True)
-    with open(output_folder / 'config.yml', 'w') as file:
-        yaml.dump(config, file)
+    config.to_yaml_file(output_folder / 'config.yml')
 
     log_git_versions(output_folder)
 
