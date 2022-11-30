@@ -97,7 +97,7 @@ def create_html(ims):
         overflow: hidden;
     }
   </style>
-
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
 
 <body>"""
@@ -116,7 +116,6 @@ def create_html(ims):
             for case in cases:
                 content += '<div>' + ''.join([make_very_nice_img(im) for im in ims if
                                               im.group == group and im.case == case and im.domain == domain]) + '</div>'
-
     with open('image_gallery.html', 'w') as f:
         f.write(header + content + footer)
 
