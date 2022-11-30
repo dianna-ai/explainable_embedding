@@ -82,3 +82,5 @@ feature_res_configs = [dataclasses.replace(original_config_options,
 runs_20221109 = number_of_masks_configs + p_keep_configs + mask_threshold_configs + mask_one_sided_configs + mask_nonselect_configs + feature_res_configs
 
 test_config = dataclasses.replace(original_config_options, number_of_masks=10, experiment_name='test')
+
+runs_20221130 = p_keep_configs + feature_res_configs

@@ -14,7 +14,7 @@ from dianna.methods.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import runs_20221109
+from distance_benchmark_configs import runs_20221109, runs_20221130
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -210,6 +210,6 @@ def run_benchmark(config, run_uid=None):
 #import dataclasses
 #run_benchmark(dataclasses.replace(test_config, number_of_masks=5000))
 
-for run_config in runs_20221109:
+for run_config in runs_20221130:
     run_benchmark(run_config)
 
