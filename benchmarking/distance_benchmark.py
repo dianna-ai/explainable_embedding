@@ -72,7 +72,7 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
                               preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e)) for e in x])
 
 
-def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, input_image, model, output_folder,
+def run_and_analyse_explainer(case_name, config: Config, embedded_reference, input_arr, input_image, model, output_folder,
                               preprocess_function=None):
     """
 
@@ -97,7 +97,9 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
                                   mask_selection_negative_range_min=config.mask_selection_negative_range_min,
                                   n_masks=config.number_of_masks,
                                   axis_labels={2: 'channels'},
-                                  preprocess_function=preprocess_function)
+                                  preprocess_function=preprocess_function,
+                                  feature_res=config.feature_res,
+                                  p_keep=config.p_keep)
     saliency, value = explainer.explain_image_distance(model, input_arr, embedded_reference)
     elapsed_time = time.time() - start_time
     with open(output_folder / 'elapsed_seconds.txt', 'w') as fh:
