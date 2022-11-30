@@ -1,15 +1,13 @@
 import os
 import random
 
-import tensorflow as tf
 from matplotlib import pyplot as plt
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
-from tensorflow.keras import backend as keras_backend
 import numpy as np
 
 
 def load_img(path, target_size):
+    from tensorflow.keras.preprocessing import image
+    from tensorflow.keras.applications.resnet50 import preprocess_input
     img = image.load_img(path, target_size=target_size)
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
@@ -19,6 +17,8 @@ def load_img(path, target_size):
 
 class ImageNetModel:
     def __init__(self):
+        from tensorflow.keras.applications.resnet50 import ResNet50
+        from tensorflow.keras import backend as keras_backend
         keras_backend.set_learning_phase(0)
         self.model = ResNet50()
         self.input_size = (224, 224)
@@ -28,6 +28,7 @@ class ImageNetModel:
 
 
 def class_name(idx):
+    from tensorflow.keras.applications.resnet50 import decode_predictions
     return decode_predictions(np.eye(1, 1000, idx))[0][0][1]
 
 
@@ -69,6 +70,8 @@ def plot_saliency_map_on_image(image, saliency, ax=None, vmin=None, vmax=None, t
 
 # from https://stackoverflow.com/a/52897216/1199693
 def set_all_the_seeds(seed_value=0):
+    import tensorflow as tf
+
     os.environ['PYTHONHASHSEED']=str(seed_value)
 
     random.seed(seed_value)

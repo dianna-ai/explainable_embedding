@@ -19,10 +19,11 @@ coverage.xml
 
 docs/_build
 
-# ide
+# ide / editor
 .idea
 .eclipse
 .vscode
+*.swp
 
 # Mac
 .DS_Store
@@ -36,3 +37,6 @@ venv3
 .python-version
 
 output/**
+# SLURM log files:
+*.out
+*.err

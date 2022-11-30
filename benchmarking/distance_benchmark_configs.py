@@ -20,7 +20,8 @@ p_keep_configs = [dataclasses.replace(original_config_options,
                                       p_keep=p_keep
                                       ) for p_keep in
                   [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99]]
-mask_selection_configs = [dataclasses.replace(original_config_options,
+
+mask_threshold_configs = [dataclasses.replace(original_config_options,
                                               experiment_name=f'mask_selection_threshold_sweep_neg{neg_min}-{neg_max}_pos{pos_min}-{pos_max}',
                                               mask_selection_range_max=pos_max,
                                               mask_selection_range_min=pos_min,
@@ -37,7 +38,8 @@ mask_selection_configs = [dataclasses.replace(original_config_options,
                               (0.0, 0.4, 0.6, 1.0),
                               (0.0, 0.5, 0.5, 1.0),
                           ]]
-mask_selection_configs = [dataclasses.replace(original_config_options,
+
+mask_one_sided_configs = [dataclasses.replace(original_config_options,
                                               experiment_name=f'mask_selection_one_sided_neg{neg_min}-{neg_max}_pos{pos_min}-{pos_max}',
                                               mask_selection_range_max=pos_max,
                                               mask_selection_range_min=pos_min,
@@ -58,7 +60,8 @@ mask_selection_configs = [dataclasses.replace(original_config_options,
                               (0.0, 0.4, 0.0, 0.0),
                               (0.0, 0.5, 0.0, 0.0),
                           ]]
-mask_selection_configs = [dataclasses.replace(original_config_options,
+
+mask_nonselect_configs = [dataclasses.replace(original_config_options,
                                               experiment_name=f'mask_non_selection_neg{neg_min}-{neg_max}_pos{pos_min}-{pos_max}',
                                               mask_selection_range_max=pos_max,
                                               mask_selection_range_min=pos_min,
@@ -69,10 +72,13 @@ mask_selection_configs = [dataclasses.replace(original_config_options,
                               (0.2, 0.5, 0.5, 0.8),
                               (0.1, 0.5, 0.5, 0.9),
                           ]]
-p_keep_configs = [dataclasses.replace(original_config_options,
-                                      experiment_name=f'feature_res_sweep_{feature_res}',
-                                      feature_res=feature_res
-                                      ) for feature_res in
-                  [1, 2, 4, 6, 8, 12, 16, 24, 32, 64, 128]]
+
+feature_res_configs = [dataclasses.replace(original_config_options,
+                                           experiment_name=f'feature_res_sweep_{feature_res}',
+                                           feature_res=feature_res
+                                           ) for feature_res in
+                       [1, 2, 4, 6, 8, 12, 16, 24, 32, 64, 128]]
+
+runs_20221109 = number_of_masks_configs + p_keep_configs + mask_threshold_configs + mask_one_sided_configs + mask_nonselect_configs + feature_res_configs
 
 test_config = dataclasses.replace(original_config_options, number_of_masks=10, experiment_name='test')
