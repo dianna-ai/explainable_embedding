@@ -1,19 +1,21 @@
 import time
 from dataclasses import dataclass
 from pathlib import Path
+import multiprocessing
 
 import PIL.Image
-import clip
 import dianna
 import git
 import numpy as np
 import torch
+import yaml
+
 from dianna.methods.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import test_config
-from utils import ImageNetModel, load_img, plot_saliency_map_on_image, set_all_the_seeds
+from distance_benchmark_configs import runs_20221109
+from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
 @dataclass
@@ -24,6 +26,8 @@ class ImageVsImageCase:
 
 
 def run_image_vs_image_experiment(case: ImageVsImageCase, config: Config, output_folder: Path):
+    # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow 
+    from utils import ImageNetModel
     model = ImageNetModel()
 
     input_image_path = Path(__file__).parent.parent / 'data/images/' / case.input_image_file_name
@@ -43,6 +47,10 @@ class ImageCaptioningCase:
 
 
 def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, output_folder: Path):
+    import tensorflow  # necessary to make sure that when experiments with tensorflow are run in the same script as experiments with torch tensorflow is imported before torch; if you do it the other way around, things will crash
+    # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow 
+    import torch
+    import clip
     # See first example at https://github.com/openai/CLIP#usage
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load("ViT-B/32", device=device)
@@ -50,13 +58,14 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
     input_image_path = Path(__file__).parent.parent / 'data/images/' / case.input_image_file_name
     input_image, input_arr = load_img(input_image_path, (224, 224))
     text = clip.tokenize([case.caption]).to(device)
-    embedded_reference = model.encode_text(text).detach().numpy()
+    embedded_reference = model.encode_text(text).detach().cpu().numpy()
 
     def runner_function(x):
         lst = []
         for e in x:
             e = e[None, :]
-            lst.append(model.encode_image(e).detach().numpy()[0])
+            e_tensor = torch.Tensor(e).to(device)
+            lst.append(model.encode_image(e_tensor).detach().cpu().numpy()[0])
         return lst
 
     run_and_analyse_explainer(case.name, config, embedded_reference, input_image, input_image, runner_function, output_folder,
@@ -77,6 +86,8 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
     :param preprocess_function:
     :return:
     """
+    print(f"running explainer for case {case_name} with config:")
+    print(config)
     set_all_the_seeds(config.random_seed)
 
     start_time = time.time()
@@ -93,7 +104,7 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
         fh.write(str(elapsed_time))
 
     central_value = value if config.manual_central_value is None else config.manual_central_value
-    np.save(output_folder / 'masks.npy', explainer.masks)
+    np.save(output_folder / 'masks_first_ten.npy', explainer.masks[:10])
     np.save(output_folder / 'predictions.npy', explainer.predictions)
     np.save(output_folder / 'saliency.npy', saliency)
     with open(output_folder / 'statistics.txt', 'w') as fh:
@@ -108,10 +119,10 @@ def run_and_analyse_explainer(case_name, config, embedded_reference, input_arr, 
 
 def log_git_versions(output_folder):
     explainable_embedding_sha = git.Repo(search_parent_directories=True).head.object.hexsha
-    dianna_sha = git.Repo(dianna.__path__[0], search_parent_directories=True).head.object.hexsha
+    #dianna_sha = git.Repo(dianna.__path__[0], search_parent_directories=True).head.object.hexsha
     with open(output_folder / 'git_commits.txt', 'w') as fh:
         fh.write(f'explainable_embedding: {explainable_embedding_sha}')
-        fh.write(f'dianna: {dianna_sha}')
+        #fh.write(f'dianna: {dianna_sha}')
 
 
 def run_benchmark(config, run_uid=None):
@@ -146,7 +157,10 @@ def run_benchmark(config, run_uid=None):
     for imagenet_case in imagenet_cases:
         case_folder = output_folder / 'image_vs_image' / imagenet_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
-        run_image_vs_image_experiment(imagenet_case, config, case_folder)
+        # we do this in a separate process because otherwise we can't get Tensorflow to give back the GPU memory for torch later on
+        process_eval = multiprocessing.Process(target=run_image_vs_image_experiment, args=(imagenet_case, config, case_folder))
+        process_eval.start()
+        process_eval.join()
 
     image_captioning_cases = [
         ImageCaptioningCase(name='bee image wrt a bee sitting on a flower',
@@ -183,10 +197,17 @@ def run_benchmark(config, run_uid=None):
     for image_captioning_case in image_captioning_cases:
         case_folder = output_folder / 'image_captioning' / image_captioning_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
-        run_image_captioning_experiment(image_captioning_case, config, case_folder)
+        # we do this in a separate process because otherwise we can't get Tensorflow to give back the GPU memory for torch later on (or vice versa? anyway, this works, hopefully)
+        process_eval = multiprocessing.Process(target=run_image_captioning_experiment, args=(image_captioning_case, config, case_folder))
+        process_eval.start()
+        process_eval.join()
 
     # something with molecules?
 
 
+#import dataclasses
+#run_benchmark(dataclasses.replace(test_config, number_of_masks=5000))
 
-run_benchmark(test_config)
+for run_config in runs_20221109:
+    run_benchmark(run_config)
+
