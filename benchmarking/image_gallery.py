@@ -2,6 +2,7 @@ import glob
 from dataclasses import dataclass
 from pathlib import Path
 from pprint import pprint
+from typing import List
 
 from Config import Config
 
@@ -53,6 +54,7 @@ def main():
 
 
 def make_very_nice_img(image: Image):
+    """Makes an HTML figure. Yes, yes!"""
     caption = image.config.to_yaml().replace('\n', '<br/>')
     return f"""
                          <figure>
@@ -70,7 +72,7 @@ def create_html(ims):
 <head>
   <meta charset="utf-8">
 
-  <title>Explainable embeddings Analysis Platform -- version 1.0.1 -- life is a jurny</title>
+  <title>Explainable embeddings Analysis Platform U -- version 1.1.2</title>
 
   <style>
     figure {
@@ -95,7 +97,10 @@ def create_html(ims):
     domains = sorted(set([im.domain for im in ims]))
     toc = '<ol>'
 
-    for group in groups:
+    special_groups = ['n_masks_sweep']
+    normal_groups = [group for group in groups if group not in special_groups]
+
+    for group in normal_groups:
         toc += f'<li><a href="#{group}">{group}</a><ol>'
 
         content += f'<h1 id="{group}">{group}</h1>'
@@ -111,10 +116,50 @@ def create_html(ims):
         
         toc += '</ol></li>'
 
+    for group in special_groups:
+        if group == 'n_masks_sweep':
+            t, c = create_html_n_masks_sweep(domains, cases, ims)
+            toc += t
+            content += c
+        else:
+            raise Exception(f"group {group} not implemented in a super special way")
+
+    # and finally end the toc
     toc += '</ol>'
 
     with open('image_gallery.html', 'w') as f:
         f.write(header + toc + content + footer)
+
+
+def create_html_n_masks_sweep(domains, cases, ims: List[Image]):
+    # especially for n_masks_sweep we do another layout
+    group = 'n_masks_sweep'
+    toc = f'<li><a href="#{group}">{group}</a><ol>'
+
+    content = f'<h1 id="{group}">{group}</h1>'
+    for domain in domains:
+        toc += f'<li><a href="#{group}-{domain}">{domain}</a></li>'
+        content += f'<h2 id="{group}-{domain}">{domain}</h2>'
+        for case in cases:
+            deez_images = {(im.config.random_seed, im.config.number_of_masks): make_very_nice_img(im)
+                           for im in sorted(ims, key=lambda x: x.config.experiment_name)
+                           if im.group == group and im.case == case and im.domain == domain}
+            if (len(deez_images)) > 0:
+                seed_list = sorted(set([im.config.random_seed for im in ims]))
+                n_masks_list = sorted(set([im.config.number_of_masks for im in ims]))
+
+                content += f'<h3>{case}</h3><table>'
+
+                for n_masks in n_masks_list:
+                    content += "<tr>"
+                    for seed in seed_list:
+                        content += f"<td>{deez_images[(seed, n_masks)]}</td>"
+                    content += "</tr>"
+
+                content += "</table>"
+
+    toc += '</ol></li>'
+    return toc, content
 
 
 main()
