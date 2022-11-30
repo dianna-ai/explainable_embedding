@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from pprint import pprint
 
-from benchmarking.Config import Config
+from Config import Config
 
 
 @dataclass
@@ -46,9 +46,9 @@ def to_image(entry):
 
 
 def main():
-    entries = glob.glob('./output_das6/*/*/*/*.png')
-    ims = [to_image(entry) for entry in entries]
-    pprint(ims)
+    entries = glob.glob('/Users/pbos/SURFdrive/explainable_embeddings_SHARED/output/*/*/*/*.png')
+    ims = [to_image(entry) for entry in sorted(entries)]
+    # pprint(ims)
     create_html(ims)
 
 
@@ -69,24 +69,9 @@ def create_html(ims):
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>A Basic HTML5 Template</title>
-  <meta name="description" content="A simple HTML5 Template for new projects.">
-  <meta name="author" content="SitePoint">
+  <title>Explainable embeddings Analysis Platform -- version 1.0.1 -- life is a jurny</title>
 
-  <meta property="og:title" content="A Basic HTML5 Template">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.sitepoint.com/a-basic-html5-template/">
-  <meta property="og:description" content="A simple HTML5 Template for new projects.">
-  <meta property="og:image" content="image.png">
-
-  <link rel="icon" href="/favicon.ico">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-
-  <link rel="stylesheet" href="css/styles.css?figure_template=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <style>
     figure {
         float: left;
@@ -97,27 +82,39 @@ def create_html(ims):
         overflow: hidden;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
 
-<body>"""
+<body>
+"""
     footer = """
 </body>
 </html>
 """
     content = ''
-    cases = set([im.case for im in ims])
-    domains = set([im.domain for im in ims])
+    cases = sorted(set([im.case for im in ims]))
+    domains = sorted(set([im.domain for im in ims]))
+    toc = '<ol>'
 
     for group in groups:
-        content += f'<h1>{group}</h1>'
+        toc += f'<li><a href="#{group}">{group}</a><ol>'
+
+        content += f'<h1 id="{group}">{group}</h1>'
         for domain in domains:
-            content += f'<h2>{domain}</h2>'
+            toc += f'<li><a href="#{group}-{domain}">{domain}</a></li>'
+            content += f'<h2 id="{group}-{domain}">{domain}</h2>'
             for case in cases:
-                content += '<div>' + ''.join([make_very_nice_img(im) for im in ims if
-                                              im.group == group and im.case == case and im.domain == domain]) + '</div>'
+                deez_images = [make_very_nice_img(im) for im in sorted(ims, key=lambda x: x.config.experiment_name)
+                               if im.group == group and im.case == case and im.domain == domain]
+                if (len(deez_images)) > 0:
+                    content += f'<h3>{case}</h3>'
+                    content += '<div>' + ''.join(deez_images) + '</div><hr>'
+        
+        toc += '</ol></li>'
+
+    toc += '</ol>'
+
     with open('image_gallery.html', 'w') as f:
-        f.write(header + content + footer)
+        f.write(header + toc + content + footer)
 
 
 main()
