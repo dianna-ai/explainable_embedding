@@ -47,7 +47,10 @@ def to_image(entry):
 
 
 def main():
-    entries = glob.glob('/Users/pbos/SURFdrive/explainable_embeddings_SHARED/output/*/*/*/*.png')
+    base_path = Path('/Users/pbos/SURFdrive/explainable_embeddings_SHARED/output')
+    entries = base_path.glob('*/*/*/*.png')
+    exclude = base_path.glob('EXCLUDE/*/*/*.png')
+    entries = list( set(entries) - set(exclude) )
     ims = [to_image(entry) for entry in sorted(entries)]
     # pprint(ims)
     create_html(ims)
@@ -77,7 +80,7 @@ def create_html(ims):
   <style>
     figure {
         float: left;
-        margin-right: 0em;
+        margin: 0em;
     }
     
     div {
