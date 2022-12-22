@@ -2,7 +2,7 @@ import glob
 from dataclasses import dataclass
 from pathlib import Path
 from pprint import pprint
-from typing import List
+from typing import List, Iterable
 
 from Config import Config
 
@@ -56,9 +56,14 @@ def main():
     create_html(ims)
 
 
-def make_very_nice_img(image: Image):
+def make_very_nice_img(image: Image, caption_parameters: Iterable[str]):
     """Makes an HTML figure. Yes, yes!"""
-    caption = image.config.to_yaml().replace('\n', '<br/>')
+    caption_lines = []
+    # only keep the lines in caption_parameters:
+    for line in image.config.to_yaml().replace('-', '_').splitlines():
+        if line.split(':')[0] in caption_parameters:
+            caption_lines.append(line)
+    caption = '<br/>'.join(caption_lines)
     return f"""
                          <figure>
                   <img src="{image.path}" style="width:100%">
@@ -81,12 +86,23 @@ def create_html(ims):
     figure {
         float: left;
         margin: 0em;
+        margin-bottom: 55px;
     }
-    
+
+    img {
+        width: 300px;
+        height: 480px;
+        object-fit: cover;
+        margin-left: -55px;
+        margin-right: -85px;
+        margin-top: -55px;
+        margin-bottom: -55px;
+    }
+
     div {
         overflow: hidden;
     }
-  </style>
+</style>
 </head>
 
 <body>
@@ -98,6 +114,7 @@ def create_html(ims):
     content = ''
     cases = sorted(set([im.case for im in ims]))
     domains = sorted(set([im.domain for im in ims]))
+    sorted_ims = sorted(ims, key=lambda x: x.config.experiment_name)
     toc = '<ol>'
 
     special_groups = ['n_masks_sweep']
@@ -111,9 +128,12 @@ def create_html(ims):
             toc += f'<li><a href="#{group}-{domain}">{domain}</a></li>'
             content += f'<h2 id="{group}-{domain}">{domain}</h2>'
             for case in cases:
-                deez_images = [make_very_nice_img(im) for im in sorted(ims, key=lambda x: x.config.experiment_name)
+                case_images = [im for im in sorted_ims 
                                if im.group == group and im.case == case and im.domain == domain]
-                if (len(deez_images)) > 0:
+                if (len(case_images)) > 0:
+                    # we only output the parameters that differ per image in this case:
+                    caption_parameters = case_images[0].config ^ case_images[1].config
+                    deez_images = [make_very_nice_img(im, caption_parameters) for im in case_images]
                     content += f'<h3>{case}</h3>'
                     content += '<div>' + ''.join(deez_images) + '</div><hr>'
         
@@ -139,15 +159,21 @@ def create_html_n_masks_sweep(domains, cases, ims: List[Image]):
     group = 'n_masks_sweep'
     toc = f'<li><a href="#{group}">{group}</a><ol>'
 
+    sorted_ims = sorted(ims, key=lambda x: x.config.experiment_name)
+
     content = f'<h1 id="{group}">{group}</h1>'
     for domain in domains:
         toc += f'<li><a href="#{group}-{domain}">{domain}</a></li>'
         content += f'<h2 id="{group}-{domain}">{domain}</h2>'
         for case in cases:
-            deez_images = {(im.config.random_seed, im.config.number_of_masks): make_very_nice_img(im)
-                           for im in sorted(ims, key=lambda x: x.config.experiment_name)
+            case_images = {(im.config.random_seed, im.config.number_of_masks): im
+                           for im in sorted_ims
                            if im.group == group and im.case == case and im.domain == domain}
-            if (len(deez_images)) > 0:
+            if (len(case_images)) > 0:
+                keys = list(case_images.keys())
+                # we only output the parameters that differ per image in this case:
+                caption_parameters = case_images[keys[0]].config ^ case_images[keys[1]].config
+                deez_images = {key: make_very_nice_img(im, caption_parameters) for key, im in case_images.items()}
                 seed_list = sorted(set([im.config.random_seed for im in ims]))
                 n_masks_list = sorted(set([im.config.number_of_masks for im in ims]))
 
