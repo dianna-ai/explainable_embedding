@@ -1,20 +1,15 @@
 import time
 from dataclasses import dataclass
 from pathlib import Path
-import multiprocessing
 
 import PIL.Image
-import dianna
 import git
 import numpy as np
-import torch
-import yaml
-
-from dianna.methods.distance import DistanceExplainer
+from distance_explainer.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import runs_20221109, runs_20221130
+from distance_benchmark_configs import test_config
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -47,8 +42,7 @@ class ImageCaptioningCase:
 
 
 def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, output_folder: Path):
-    import tensorflow  # necessary to make sure that when experiments with tensorflow are run in the same script as experiments with torch tensorflow is imported before torch; if you do it the other way around, things will crash
-    # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow 
+    # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow
     import torch
     import clip
     # See first example at https://github.com/openai/CLIP#usage
@@ -160,9 +154,10 @@ def run_benchmark(config, run_uid=None):
         case_folder = output_folder / 'image_vs_image' / imagenet_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
         # we do this in a separate process because otherwise we can't get Tensorflow to give back the GPU memory for torch later on
-        process_eval = multiprocessing.Process(target=run_image_vs_image_experiment, args=(imagenet_case, config, case_folder))
-        process_eval.start()
-        process_eval.join()
+        # process_eval = multiprocessing.Process(target=run_image_vs_image_experiment, args=(imagenet_case, config, case_folder))
+        # process_eval.start()
+        # process_eval.join()
+        run_image_vs_image_experiment(imagenet_case, config, case_folder)
 
     image_captioning_cases = [
         ImageCaptioningCase(name='bee image wrt a bee sitting on a flower',
@@ -200,16 +195,17 @@ def run_benchmark(config, run_uid=None):
         case_folder = output_folder / 'image_captioning' / image_captioning_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
         # we do this in a separate process because otherwise we can't get Tensorflow to give back the GPU memory for torch later on (or vice versa? anyway, this works, hopefully)
-        process_eval = multiprocessing.Process(target=run_image_captioning_experiment, args=(image_captioning_case, config, case_folder))
-        process_eval.start()
-        process_eval.join()
+        # process_eval = multiprocessing.Process(target=run_image_captioning_experiment, args=(image_captioning_case, config, case_folder))
+        # process_eval.start()
+        # process_eval.join()
+        run_image_captioning_experiment(image_captioning_case, config, case_folder)
 
     # something with molecules?
 
 
-#import dataclasses
-#run_benchmark(dataclasses.replace(test_config, number_of_masks=5000))
+import dataclasses
+run_benchmark(dataclasses.replace(test_config, number_of_masks=500))
 
-for run_config in runs_20221130:
-    run_benchmark(run_config)
+# for run_config in runs_20221130:
+#     run_benchmark(run_config)
 
