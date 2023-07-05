@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Union, Optional
 
 from dataclass_wizard import YAMLWizard
@@ -25,6 +25,14 @@ class Config(YAMLWizard):
         except ConstructorError as e:
             with open(path, 'r') as f:
                 return cls.from_yaml('\n'.join(f.read().split('\n')[1:]))
+
+    def __xor__(self, other):
+        """Compares two Config objects and returns a list of parameter names that differ between them."""
+        differing_fields = []
+        for field in fields(Config):
+            if getattr(self, field.name) != getattr(other, field.name):
+                differing_fields.append(field.name)
+        return differing_fields
 
 
 original_config_options = Config(

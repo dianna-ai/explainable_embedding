@@ -1,0 +1,34 @@
+<!-- Googled from a.o.:
+
+https://www.w3schools.com/css/css3_animations.asp
+http://css3.bradshawenterprises.com/cfimg/
+https://uploadcare.com/blog/how-to-crop-an-image-in-css/#the-img-tag-with-object-fit-and-object-position
+
+-->
+
+<html>
+    <head>
+        <style>
+            @keyframes idtje {
+                0%   {background-image: url("file:///Users/pbos/SURFdrive/explainable_embeddings_SHARED/output/mask_selection_threshold_sweep_neg0.0-0.05_pos0.95-1.0_1668052057/image_captioning/labradoodles/saliency.png");}
+                50%  {background-image: url("file:///Users/pbos/SURFdrive/explainable_embeddings_SHARED/output/mask_selection_threshold_sweep_neg0.0-0.15_pos0.85-1.0_1668052708/image_captioning/labradoodles/saliency.png");}
+                /* 50%  {background-color: blue;}
+                100% {background-color: green;} */
+            }
+            #deze {
+                width: 100%;
+                height: 100%;
+                animation-name: idtje;
+                animation-duration: 2s;
+                animation-iteration-count: infinite;
+                background-image: url("/Users/pbos/SURFdrive/explainable_embeddings_SHARED/output/mask_selection_threshold_sweep_neg0.0-0.05_pos0.95-1.0_1668052057/image_captioning/labradoodles/saliency.png");
+            }
+        </style>
+    </head>
+<body>
+
+    <div id="deze"> HOOOI</div>
+
+</body>
+
+</html>
