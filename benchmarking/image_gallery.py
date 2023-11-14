@@ -1,3 +1,4 @@
+import argparse
 import glob
 from dataclasses import dataclass
 from pathlib import Path
@@ -46,11 +47,10 @@ def to_image(entry):
                  )
 
 
-def main():
-    base_path = Path('/Users/pbos/SURFdrive/explainable_embeddings_SHARED/output')
+def main(base_path=Path('/Users/pbos/SURFdrive/explainable_embeddings_SHARED/output')):
     entries = base_path.glob('*/*/*/*.png')
     exclude = base_path.glob('EXCLUDE/*/*/*.png')
-    entries = list( set(entries) - set(exclude) )
+    entries = list(set(entries) - set(exclude))
     ims = [to_image(entry) for entry in sorted(entries)]
     # pprint(ims)
     create_html(ims)
@@ -128,7 +128,7 @@ def create_html(ims):
             toc += f'<li><a href="#{group}-{domain}">{domain}</a></li>'
             content += f'<h2 id="{group}-{domain}">{domain}</h2>'
             for case in cases:
-                case_images = [im for im in sorted_ims 
+                case_images = [im for im in sorted_ims
                                if im.group == group and im.case == case and im.domain == domain]
                 if (len(case_images)) > 0:
                     # we only output the parameters that differ per image in this case:
@@ -136,7 +136,7 @@ def create_html(ims):
                     deez_images = [make_very_nice_img(im, caption_parameters) for im in case_images]
                     content += f'<h3>{case}</h3>'
                     content += '<div>' + ''.join(deez_images) + '</div><hr>'
-        
+
         toc += '</ol></li>'
 
     for group in special_groups:
@@ -191,4 +191,14 @@ def create_html_n_masks_sweep(domains, cases, ims: List[Image]):
     return toc, content
 
 
-main()
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Script to create an image gallery for the output.")
+    parser.add_argument("base_path", type=Path, help="The base path to be processed; the root of the output folder.")
+
+    args = parser.parse_args()
+    return args.base_path
+
+
+if __name__ == '__main__':
+    base_path = parse_arguments()
+    main(base_path=base_path)
