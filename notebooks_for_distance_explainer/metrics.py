@@ -18,7 +18,7 @@ from matplotlib.figure import Figure
 from collections import defaultdict
 
 
-class Incremental_deletion():
+class IncrementalDeletion():
     '''Implemenation for the incremental deletion method. Similar to the evaluation 
     inspired by the RISE paper: https://arxiv.org/uti/1806.07421.pdf.
 
@@ -208,6 +208,7 @@ class Incremental_deletion():
         Returns:
             Indices of `salience_map` sorted by their value.
         '''
+        print(f'{salience_map.shape=}')
         return np.stack(np.unravel_index(np.argsort(salience_map, axis=None, 
                                                     kind='mergesort'), 
                                          salience_map.shape), axis=-1)[::-1]
