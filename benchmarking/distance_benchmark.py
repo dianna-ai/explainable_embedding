@@ -62,8 +62,8 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
             lst.append(model.encode_image(e_tensor).detach().cpu().numpy()[0])
         return lst
 
-    run_and_analyse_explainer(case.name, config, embedded_reference, input_image, input_image, runner_function, output_folder,
-                              preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e)) for e in x])
+    run_and_analyse_explainer(case.name, config, embedded_reference, input_arr[0], input_image, runner_function, output_folder,
+                              preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e.astype(np.uint8))) for e in x])
 
 
 def run_and_analyse_explainer(case_name, config: Config, embedded_reference, input_arr, input_image, model, output_folder,
