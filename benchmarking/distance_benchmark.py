@@ -9,7 +9,7 @@ from distance_explainer.distance import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import test_config
+from distance_benchmark_configs import runs_20240206
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -203,9 +203,9 @@ def run_benchmark(config, run_uid=None):
     # something with molecules?
 
 
-import dataclasses
-run_benchmark(dataclasses.replace(test_config, number_of_masks=500))
+#import dataclasses
+#run_benchmark(dataclasses.replace(test_config, number_of_masks=500))
 
-# for run_config in runs_20221130:
-#     run_benchmark(run_config)
+for run_config in runs_20240206:
+    run_benchmark(run_config)
 
