@@ -5,7 +5,7 @@ from pathlib import Path
 import PIL.Image
 import git
 import numpy as np
-from distance_explainer.distance import DistanceExplainer
+from distance_explainer import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
