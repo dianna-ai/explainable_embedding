@@ -9,7 +9,7 @@ from distance_explainer import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import runs_20240227
+from distance_benchmark_configs import runs_20240227_moar_features_moar_masks
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -121,7 +121,7 @@ def log_git_versions(output_folder):
         #fh.write(f'dianna: {dianna_sha}')
 
 
-def run_benchmark(config, run_uid=None):
+def run_benchmark(config, run_uid=None, image_image_cases=slice(None), image_caption_cases=slice(None)):
     if run_uid is None:
         run_uid = int(time.time())
 
@@ -150,7 +150,7 @@ def run_benchmark(config, run_uid=None):
                                        input_image_file_name='car2.png',
                                        reference_image_file_name='bike.jpg')]
     # imagenet_cases = []
-    for imagenet_case in imagenet_cases:
+    for imagenet_case in imagenet_cases[image_image_cases]:
         case_folder = output_folder / 'image_vs_image' / imagenet_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
         # we do this in a separate process because otherwise we can't get Tensorflow to give back the GPU memory for torch later on
@@ -191,7 +191,7 @@ def run_benchmark(config, run_uid=None):
                             input_image_file_name='car2.png',
                             caption='a bicycle')
     ]
-    for image_captioning_case in image_captioning_cases:
+    for image_captioning_case in image_captioning_cases[image_caption_cases]:
         case_folder = output_folder / 'image_captioning' / image_captioning_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
         # we do this in a separate process because otherwise we can't get Tensorflow to give back the GPU memory for torch later on (or vice versa? anyway, this works, hopefully)
@@ -206,6 +206,9 @@ def run_benchmark(config, run_uid=None):
 #import dataclasses
 #run_benchmark(dataclasses.replace(test_config, number_of_masks=500))
 
-for run_config in runs_20240227:
-    run_benchmark(run_config)
+#for run_config in runs_20240227:
+#    run_benchmark(run_config)
+
+for run_config in runs_20240227_moar_features_moar_masks:
+    run_benchmark(run_config, image_image_cases=slice(0, 1), image_caption_cases=slice(1, 4, 2))
 

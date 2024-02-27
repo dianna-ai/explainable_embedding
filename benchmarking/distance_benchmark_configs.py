@@ -88,3 +88,11 @@ runs_20240206 = mask_one_sided_configs
 
 runs_20240227 = mask_one_sided_configs + mask_threshold_configs + mask_nonselect_configs
 
+runs_20240227_moar_features_moar_masks = [dataclasses.replace(original_config_options,
+                                           experiment_name=f'feature_res_masks_sweeplet_{feature_res}_features_{N_masks}_masks',
+                                           feature_res=feature_res,
+                                           number_of_masks=N_masks,
+                                           ) for feature_res, N_masks in
+                                          [(16, 2000), (16, 4000), (16, 8000),
+                                           (32, 4000), (32, 8000), (32, 16000), (32, 32000)]]
+
