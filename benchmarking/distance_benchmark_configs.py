@@ -45,6 +45,7 @@ mask_one_sided_configs = [dataclasses.replace(original_config_options,
                                               mask_selection_range_min=pos_min,
                                               mask_selection_negative_range_max=neg_max,
                                               mask_selection_negative_range_min=neg_min,
+                                              manual_central_value=None,
                                               ) for pos_min, pos_max, neg_min, neg_max in
                           [
                               (0.0, 0.0, 0.0, 1.0),

@@ -9,7 +9,7 @@ from distance_explainer import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import runs_20240227_moar_features_moar_masks
+from distance_benchmark_configs import runs_20240206
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -203,12 +203,12 @@ def run_benchmark(config, run_uid=None, image_image_cases=slice(None), image_cap
     # something with molecules?
 
 
-#import dataclasses
-#run_benchmark(dataclasses.replace(test_config, number_of_masks=500))
+if __name__ == '__main__':
+    # import dataclasses
+    #run_benchmark(dataclasses.replace(test_config, number_of_masks=500))
 
-#for run_config in runs_20240227:
-#    run_benchmark(run_config)
+    for run_config in runs_20240206:
+        run_benchmark(run_config)
 
-for run_config in runs_20240227_moar_features_moar_masks:
-    run_benchmark(run_config, image_image_cases=slice(0, 1), image_caption_cases=slice(1, 4, 2))
-
+    # for run_config in runs_20240227_moar_features_moar_masks:
+    #    run_benchmark(run_config, image_image_cases=slice(0, 1), image_caption_cases=slice(1, 4, 2))
