@@ -9,7 +9,7 @@ from distance_explainer import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import runs_20240206
+from distance_benchmark_configs import runs_20240227
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -206,6 +206,6 @@ def run_benchmark(config, run_uid=None):
 #import dataclasses
 #run_benchmark(dataclasses.replace(test_config, number_of_masks=500))
 
-for run_config in runs_20240206:
+for run_config in runs_20240227:
     run_benchmark(run_config)
 

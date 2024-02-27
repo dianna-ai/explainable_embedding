@@ -27,7 +27,7 @@ mask_threshold_configs = [dataclasses.replace(original_config_options,
                                               mask_selection_range_min=pos_min,
                                               mask_selection_negative_range_max=neg_max,
                                               mask_selection_negative_range_min=neg_min,
-                                              ) for neg_min, neg_max, pos_min, pos_max in
+                                              ) for pos_min, pos_max, neg_min, neg_max in
                           [
                               (0.0, 0.05, 0.95, 1.0),
                               (0.0, 0.1, 0.9, 1.0),
@@ -45,7 +45,7 @@ mask_one_sided_configs = [dataclasses.replace(original_config_options,
                                               mask_selection_range_min=pos_min,
                                               mask_selection_negative_range_max=neg_max,
                                               mask_selection_negative_range_min=neg_min,
-                                              ) for neg_min, neg_max, pos_min, pos_max in
+                                              ) for pos_min, pos_max, neg_min, neg_max in
                           [
                               (0.0, 0.0, 0.0, 1.0),
                               (0.0, 0.0, 0.9, 1.0),
@@ -66,7 +66,7 @@ mask_nonselect_configs = [dataclasses.replace(original_config_options,
                                               mask_selection_range_min=pos_min,
                                               mask_selection_negative_range_max=neg_max,
                                               mask_selection_negative_range_min=neg_min,
-                                              ) for neg_min, neg_max, pos_min, pos_max in
+                                              ) for pos_min, pos_max, neg_min, neg_max in
                           [
                               (0.2, 0.5, 0.5, 0.8),
                               (0.1, 0.5, 0.5, 0.9),
@@ -85,4 +85,6 @@ test_config = dataclasses.replace(original_config_options, number_of_masks=10, e
 runs_20221130 = p_keep_configs + feature_res_configs
 
 runs_20240206 = mask_one_sided_configs
+
+runs_20240227 = mask_one_sided_configs + mask_threshold_configs + mask_nonselect_configs
 
