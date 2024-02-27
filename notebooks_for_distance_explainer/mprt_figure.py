@@ -1,8 +1,9 @@
 import json
 import pickle
 
+import distance_explainer
 import numpy as np
-import distance_explainer.distance
+
 from tensorflow.keras.applications.vgg16 import VGG16
 import warnings
 from pathlib import Path
@@ -18,6 +19,7 @@ def main(n_masks=1000):
     def load_img(path, target_size):
         from tensorflow.keras.preprocessing import image
         from tensorflow.keras.applications.resnet50 import preprocess_input
+        print(Path(path).absolute())
         img = image.load_img(path, target_size=target_size)
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
@@ -32,7 +34,7 @@ def main(n_masks=1000):
     reference_img, reference_arr = load_img(Path('data/' + reference_title + '.jpg'), (224, 224, 3))
     embedded_reference = model(reference_arr)
 
-    masks = distance_explainer.distance.generate_masks_for_images(bee_arr.shape[1:3], n_masks, 0.5, 8)
+    masks = distance_explainer.generate_masks_for_images(bee_arr.shape[1:3], n_masks, 0.5, 8)
 
     channel_first = True  # transpose to always have channels first (pytorch style)
 
@@ -55,7 +57,7 @@ def main(n_masks=1000):
         batch_size = inputst.shape[0]
         saliencies = np.empty(inputst.shape)
         for i in range(batch_size):
-            saliencies[i], _ = distance_explainer.distance.DistanceExplainer(
+            saliencies[i], _ = distance_explainer.DistanceExplainer(
                 axis_labels=['x', 'y', 'channels'],
                 n_masks=n_masks).explain_image_distance(model, inputst[i], embedded_reference, masks=masks)
 
