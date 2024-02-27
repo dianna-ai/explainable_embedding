@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from pprint import pprint
 from typing import List, Iterable
+from natsort import natsorted
 
 from Config import Config
 
@@ -25,6 +26,7 @@ groups = [
     'mask_selection_one_sided',
     'mask_non_selection',
     'feature_res_sweep',
+    'feature_res_masks_sweeplet',
 ]
 
 
@@ -114,7 +116,7 @@ def create_html(ims):
     content = ''
     cases = sorted(set([im.case for im in ims]))
     domains = sorted(set([im.domain for im in ims]))
-    sorted_ims = sorted(ims, key=lambda x: x.config.experiment_name)
+    sorted_ims = natsorted(ims, key=lambda x: x.config.experiment_name)
     toc = '<ol>'
 
     special_groups = ['n_masks_sweep']
@@ -182,7 +184,11 @@ def create_html_n_masks_sweep(domains, cases, ims: List[Image]):
                 for n_masks in n_masks_list:
                     content += "<tr>"
                     for seed in seed_list:
-                        content += f"<td>{deez_images[(seed, n_masks)]}</td>"
+                        try:
+                            content += f"<td>{deez_images[(seed, n_masks)]}</td>"
+                        except KeyError:
+                            pass # we added since 27 Feb 2024 some experiments with number of masks that we didn't use
+                                 # for the N_masks sweep experiment, so we skip those
                     content += "</tr>"
 
                 content += "</table>"
