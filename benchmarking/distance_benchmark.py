@@ -66,7 +66,7 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
                               preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e.astype(np.uint8))) for e in x])
 
 
-def run_and_analyse_explainer(case_name, config: Config, embedded_reference, input_arr, input_image, model, output_folder,
+def run_and_analyse_explainer(case_name, config: Config, embedded_reference, input_arr, input_image, model, output_folder: Path,
                               preprocess_function=None):
     """
 
@@ -94,17 +94,40 @@ def run_and_analyse_explainer(case_name, config: Config, embedded_reference, inp
                                   preprocess_function=preprocess_function,
                                   feature_res=config.feature_res,
                                   p_keep=config.p_keep)
-    saliency, value = explainer.explain_image_distance(model, input_arr, embedded_reference)
-    elapsed_time = time.time() - start_time
-    with open(output_folder / 'elapsed_seconds.txt', 'w') as fh:
-        fh.write(str(elapsed_time))
+    timing_filepath = output_folder / 'elapsed_seconds.txt'
+    mask_filepath = output_folder / 'masks_first_ten.npy'
+    predictions_filepath = output_folder / 'predictions.npy'
+    saliency_filepath = output_folder / 'saliency.npy'
+    explainer_neutral_value_filepath = output_folder / 'explainer_neutral_value.txt'
+    statistics_filepath = output_folder / 'statistics.txt'
 
-    central_value = value if config.manual_central_value is None else config.manual_central_value
-    np.save(output_folder / 'masks_first_ten.npy', explainer.masks[:10])
-    np.save(output_folder / 'predictions.npy', explainer.predictions)
-    np.save(output_folder / 'saliency.npy', saliency)
-    with open(output_folder / 'statistics.txt', 'w') as fh:
-        fh.write(explainer.statistics)
+    if (
+        timing_filepath.exists()
+        and mask_filepath.exists()
+        and predictions_filepath.exists()
+        and saliency_filepath.exists()
+        and statistics_filepath.exists()
+    ):
+        saliency = np.load(saliency_filepath)
+    else:
+        saliency, explainer_neutral_value = explainer.explain_image_distance(model, input_arr, embedded_reference)
+
+        elapsed_time = time.time() - start_time
+        with open(timing_filepath, 'w') as fh:
+            fh.write(str(elapsed_time))
+        np.save(mask_filepath, explainer.masks[:10])
+        np.save(predictions_filepath, explainer.predictions)
+        np.save(saliency_filepath, saliency)
+        with open(statistics_filepath, 'w') as fh:
+            fh.write(explainer.statistics)
+
+    if not explainer_neutral_value_filepath.exists():
+        explainer_neutral_value = config.p_keep
+        np.savetxt(explainer_neutral_value_filepath, explainer_neutral_value)
+
+    explainer_neutral_value = np.loadtxt(explainer_neutral_value_filepath)
+
+    central_value = explainer_neutral_value if config.manual_central_value is None else config.manual_central_value
     fig, ax = plt.subplots(1, 1)
     plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
                                title=f'{case_name} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
