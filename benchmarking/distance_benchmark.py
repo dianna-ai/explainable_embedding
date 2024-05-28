@@ -124,7 +124,7 @@ def run_and_analyse_explainer(case_name, config: Config, embedded_reference, inp
 
     if not explainer_neutral_value_filepath.exists():
         explainer_neutral_value = config.p_keep
-        np.savetxt(explainer_neutral_value_filepath, explainer_neutral_value)
+        np.savetxt(explainer_neutral_value_filepath, [explainer_neutral_value])
 
     explainer_neutral_value = np.loadtxt(explainer_neutral_value_filepath)
 
@@ -236,12 +236,11 @@ if __name__ == '__main__':
     #     run_benchmark(run_config, run_uid=run_uid)
 
     # N.B.: below a hacky way to fix one (one-sided) experiment!
-    paths = Path('output').glob(f'{runs_20240206[0].experiment_name}_*17096*')
 
-    for ix, run_config in enumerate(runs_20240206):
-        path = paths[ix]
-        run_uid = str(path).split("_")[:-1]
-        print(run_uid)
-        # run_benchmark(run_config, run_uid=run_uid)
+    for run_config in runs_20240206:
+        path = list(Path('output').glob(f'{run_config.experiment_name}_*17096*'))[0]
+        run_uid = str(path).split("_")[-1]
+        run_benchmark(run_config, run_uid=run_uid)
+
     # for run_config in runs_20240227_moar_features_moar_masks:
     #    run_benchmark(run_config, image_image_cases=slice(0, 1), image_caption_cases=slice(1, 4, 2))
