@@ -36,7 +36,8 @@ venv3
 
 .python-version
 
-output/**
+**/output/**
+paper figuren/**
 *.html
 # SLURM log files:
 *.out
