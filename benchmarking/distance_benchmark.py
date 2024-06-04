@@ -108,8 +108,10 @@ def run_and_analyse_explainer(case_name, config: Config, embedded_reference, inp
         and predictions_filepath.exists()
         and saliency_filepath.exists()
         and statistics_filepath.exists()
+        and explainer_neutral_value_filepath.exists()
     ):
         saliency = np.load(saliency_filepath)
+        explainer_neutral_value = np.loadtxt(explainer_neutral_value_filepath)
     else:
         saliency, explainer_neutral_value = explainer.explain_image_distance(model, input_arr, embedded_reference)
 
@@ -121,12 +123,7 @@ def run_and_analyse_explainer(case_name, config: Config, embedded_reference, inp
         np.save(saliency_filepath, saliency)
         with open(statistics_filepath, 'w') as fh:
             fh.write(explainer.statistics)
-
-    if True: # this was a temporary hack, so whatever... not explainer_neutral_value_filepath.exists():
-        explainer_neutral_value = -config.p_keep
         np.savetxt(explainer_neutral_value_filepath, [explainer_neutral_value])
-
-    explainer_neutral_value = np.loadtxt(explainer_neutral_value_filepath)
 
     central_value = explainer_neutral_value if config.manual_central_value is None else config.manual_central_value
     fig, ax = plt.subplots(1, 1)
@@ -237,10 +234,10 @@ if __name__ == '__main__':
 
     # N.B.: below a hacky way to fix one (one-sided) experiment!
 
-    for run_config in reruns_20240604:
-        path = list(Path('output').glob(f'{run_config.experiment_name}_*17096*'))[0]
-        run_uid = str(path).split("_")[-1]
-        run_benchmark(run_config, run_uid=run_uid)
+    # for run_config in reruns_20240604:
+    #     path = list(Path('output').glob(f'{run_config.experiment_name}_*17096*'))[0]
+    #     run_uid = str(path).split("_")[-1]
+    #     run_benchmark(run_config, run_uid=run_uid)
 
     # for run_config in runs_20240227_moar_features_moar_masks:
     #    run_benchmark(run_config, image_image_cases=slice(0, 1), image_caption_cases=slice(1, 4, 2))
