@@ -97,3 +97,21 @@ runs_20240227_moar_features_moar_masks = [dataclasses.replace(original_config_op
                                           [(16, 2000), (16, 4000), (16, 8000),
                                            (32, 4000), (32, 8000), (32, 16000), (32, 32000)]]
 
+# only the negative parts of the mask_one_sided_configs
+reruns_20240604 = [dataclasses.replace(original_config_options,
+                                              experiment_name=f'mask_selection_one_sided_neg{neg_min}-{neg_max}_pos{pos_min}-{pos_max}',
+                                              mask_selection_range_max=pos_max,
+                                              mask_selection_range_min=pos_min,
+                                              mask_selection_negative_range_max=neg_max,
+                                              mask_selection_negative_range_min=neg_min,
+                                              manual_central_value=None,
+                                              ) for pos_min, pos_max, neg_min, neg_max in
+                          [
+                              (0.0, 0.0, 0.0, 1.0),
+                              (0.0, 0.0, 0.9, 1.0),
+                              (0.0, 0.0, 0.8, 1.0),
+                              (0.0, 0.0, 0.7, 1.0),
+                              (0.0, 0.0, 0.6, 1.0),
+                              (0.0, 0.0, 0.5, 1.0),
+                          ]]
+

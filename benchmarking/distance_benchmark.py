@@ -10,7 +10,7 @@ from distance_explainer import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import runs_20240206
+from distance_benchmark_configs import reruns_20240604
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -122,8 +122,8 @@ def run_and_analyse_explainer(case_name, config: Config, embedded_reference, inp
         with open(statistics_filepath, 'w') as fh:
             fh.write(explainer.statistics)
 
-    if not explainer_neutral_value_filepath.exists():
-        explainer_neutral_value = config.p_keep
+    if True: # this was a temporary hack, so whatever... not explainer_neutral_value_filepath.exists():
+        explainer_neutral_value = -config.p_keep
         np.savetxt(explainer_neutral_value_filepath, [explainer_neutral_value])
 
     explainer_neutral_value = np.loadtxt(explainer_neutral_value_filepath)
@@ -237,7 +237,7 @@ if __name__ == '__main__':
 
     # N.B.: below a hacky way to fix one (one-sided) experiment!
 
-    for run_config in runs_20240206:
+    for run_config in reruns_20240604:
         path = list(Path('output').glob(f'{run_config.experiment_name}_*17096*'))[0]
         run_uid = str(path).split("_")[-1]
         run_benchmark(run_config, run_uid=run_uid)
