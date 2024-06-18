@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.metrics import pairwise_distances
 from tqdm import tqdm
 
-from notebooks_for_distance_explainer.metrics import IncrementalDeletion
+from metrics import IncrementalDeletion
 
 import matplotlib.pyplot as plt
 
