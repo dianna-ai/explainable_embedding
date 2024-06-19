@@ -96,32 +96,33 @@ def visualize(salience_map: NDArray,
         scores: The model scores to be visualized
         save_to: path to save the image to
     '''
-    fig = plot_image(salience_map, image_data, show_plot=False)
-    ax1 = fig.axes[0]
-    ax2 = fig.add_subplot((1, 0, 1, 1))
+    fig, ax = plt.subplots(1, 2)
+    plot_image(salience_map, image_data, show_plot=False, ax=ax[0])
+    # ax1 = fig.axes[0]
+    # ax2 = fig.add_subplot((1, 0, 1, 1))
 
     # plot deletion curves
     for score, label in zip(scores, labels):
         n_steps = score.size
         x = np.arange(n_steps) / n_steps
         # text = 'AUC: {:.3f}'.format(auc(x, scores))
-        curve, = ax2.plot(x, score)
+        curve, = ax[1].plot(x, score)
         curve.set_label(label)
-        ax2.set_xlim(0, 1.)
+        ax[1].set_xlim(0, 1.)
         # ax2.set_ylim(0, 1.05)
-        ax2.fill_between(x, 0, score, alpha=.4)
+        ax[1].fill_between(x, 0, score, alpha=.4)
         # ax2.annotate(xy=(.5, .5), va='center', ha='center', text=text, **kwargs)
-        ax2.set_title('Model score after removing fraction of pixels', **kwargs)
-        ax2.set_xlabel('Fraction of removed pixels', **kwargs)
-        ax2.set_ylabel('Model score', **kwargs)
+        ax[1].set_title('Model score after removing fraction of pixels', **kwargs)
+        ax[1].set_xlabel('Fraction of removed pixels', **kwargs)
+        ax[1].set_ylabel('Model score', **kwargs)
 
-    # Force same bbox height and width for axes
-    ax1_pos = ax1.get_position()
-    ax2_pos = ax2.get_position()
-    ax2_pos.y0 = ax1_pos.y0
-    ax2_pos.x1 = ax2_pos.x0 + (ax1_pos.x1 - ax1_pos.x0)
-    ax2_pos.y1 = ax2_pos.y0 + (ax1_pos.y1 - ax1_pos.y0)
-    ax2.set_position(ax2_pos)
+    # # Force same bbox height and width for axes
+    # ax1_pos = ax1.get_position()
+    # ax2_pos = ax2.get_position()
+    # ax2_pos.y0 = ax1_pos.y0
+    # ax2_pos.x1 = ax2_pos.x0 + (ax1_pos.x1 - ax1_pos.x0)
+    # ax2_pos.y1 = ax2_pos.y0 + (ax1_pos.y1 - ax1_pos.y0)
+    # ax2.set_position(ax2_pos)
 
     plt.legend()
 
@@ -129,8 +130,6 @@ def visualize(salience_map: NDArray,
     if show_plot:
         plt.show()
     elif save_to:
-        if not save_to.endswith('.png'):
-            save_to += '.png'
         plt.save(save_to, dpi=200)
 
     return fig
