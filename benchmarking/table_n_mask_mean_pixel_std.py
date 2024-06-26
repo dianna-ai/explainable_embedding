@@ -62,23 +62,35 @@ def main():
                                                               for n_mask in n_masks_vals],
                        (first_level_index, 'dogcar vs car'): [get_mean(data_path, case_type, 'dogcar_vs_car', n_mask)
                                                               for n_mask in n_masks_vals], }, )
-    print(table.to_string(index=False))
-    print(table.to_latex(index=False))
+    float_format = '%.3f'
+    print(table.to_string(index=False, float_format=float_format))
+    print(table.to_latex(index=False, float_format=float_format))
 
 
 def get_mean(data_path: Path, case_type : str, case: str, n_masks: int) -> float:
-    file_paths = get_saliency_file_paths(data_path, case_type, case, n_masks)
+    file_paths = list(get_saliency_file_paths(data_path, case_type, case, n_masks))
     saliencies = np.stack([load_map(p) for p in file_paths])
     std_per_pixel = saliencies.std(axis=0)
-    return std_per_pixel.mean()
+    mean = std_per_pixel.mean()
+    file_paths_str = "\n".join([str(p) for p in file_paths])
+    print(f'Computed mean {mean} using the following file names:{file_paths_str}')
+    return mean
 
 
 def get_saliency_file_paths(data_path: Path, case_type: str, case:str, n_mask:int) -> Iterable[Path]:
     for saliency_file_path in data_path.glob(f'*/{case_type}/{case}/saliency.npy'):
         run_name = saliency_file_path.relative_to(data_path).parts[0]
-        _n, _masks, _sweep, n_masks, _seed, seed, run_id = run_name.split('_')
-        if int(n_masks) == n_mask:
-            yield saliency_file_path
+        try:
+            _n, _masks, _sweep, n_masks, _seed, seed, run_id = run_name.split('_')
+        except ValueError:
+            continue
+
+        if _n == 'n' and _masks == 'masks' and _sweep == 'sweep' and _seed == 'seed':
+            if int(n_masks) == n_mask:
+                yield saliency_file_path
+        else:
+            continue
+
 
 
 if __name__ == "__main__":
