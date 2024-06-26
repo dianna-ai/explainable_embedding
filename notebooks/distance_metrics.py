@@ -89,6 +89,8 @@ def visualize(salience_map: NDArray,
               labels: tuple,
               save_to: Optional[str] = None,
               show_plot: bool = True,
+              ax_image: Optional[plt.Axes] = None,
+              ax_deletion: Optional[plt.Axes] = None,
               **kwargs) -> Figure:
     '''Visualize the computed scores and its AUC score.
 
@@ -96,40 +98,32 @@ def visualize(salience_map: NDArray,
         scores: The model scores to be visualized
         save_to: path to save the image to
     '''
-    fig, ax = plt.subplots(1, 2)
-    plot_image(salience_map, image_data, show_plot=False, ax=ax[0])
-    # ax1 = fig.axes[0]
-    # ax2 = fig.add_subplot((1, 0, 1, 1))
+    if ax_image is None or ax_deletion is None or ax_image.get_figure() != ax_deletion.get_figure():
+        fig, ax = plt.subplots(1, 2)
+        ax_image = ax[0]
+        ax_deletion = ax[1]
+    else:
+        fig = ax_image.get_figure()
+    plot_image(salience_map, image_data, show_plot=False, ax=ax_image)
 
     # plot deletion curves
     for score, label in zip(scores, labels):
         n_steps = score.size
         x = np.arange(n_steps) / n_steps
-        # text = 'AUC: {:.3f}'.format(auc(x, scores))
-        curve, = ax[1].plot(x, score)
+        curve, = ax_deletion.plot(x, score)
         curve.set_label(label)
-        ax[1].set_xlim(0, 1.)
-        # ax2.set_ylim(0, 1.05)
-        ax[1].fill_between(x, 0, score, alpha=.4)
-        # ax2.annotate(xy=(.5, .5), va='center', ha='center', text=text, **kwargs)
-        ax[1].set_title('Model score after removing fraction of pixels', **kwargs)
-        ax[1].set_xlabel('Fraction of removed pixels', **kwargs)
-        ax[1].set_ylabel('Model score', **kwargs)
-
-    # # Force same bbox height and width for axes
-    # ax1_pos = ax1.get_position()
-    # ax2_pos = ax2.get_position()
-    # ax2_pos.y0 = ax1_pos.y0
-    # ax2_pos.x1 = ax2_pos.x0 + (ax1_pos.x1 - ax1_pos.x0)
-    # ax2_pos.y1 = ax2_pos.y0 + (ax1_pos.y1 - ax1_pos.y0)
-    # ax2.set_position(ax2_pos)
+        ax_deletion.set_xlim(0, 1.)
+        ax_deletion.fill_between(x, 0, score, alpha=.4)
+        ax_deletion.set_title('Model score after removing fraction of pixels', **kwargs)
+        ax_deletion.set_xlabel('Fraction of removed pixels', **kwargs)
+        ax_deletion.set_ylabel('Model score', **kwargs)
 
     plt.legend()
 
     # Save or show
     if show_plot:
         plt.show()
-    elif save_to:
-        plt.save(save_to, dpi=200)
+    if save_to:
+        fig.savefig(save_to, dpi=200)
 
     return fig

@@ -82,7 +82,7 @@ def generate_examples(img_data, salient_order, impute_value, model, embedded_ref
     return imgs, scores, n_removed
 
 
-def make_figures(reference_img_filename: str, output_folder: Path):
+def make_figures(reference_img_filename: str, output_folder: Path, skip_deleter=False):
     fn_tag = reference_img_filename.split('.')[0]
 
     np.random.seed(0)
@@ -152,25 +152,38 @@ def make_figures(reference_img_filename: str, output_folder: Path):
 
     # Visualize the examples
     npixels = img_data.shape[0] * img_data.shape[1]
-    fig, axes = plt.subplots(nrows=3, ncols=5, figsize=(12, 8))
+    fig, axes = plt.subplots(nrows=3, ncols=5, figsize=(12, 7), layout="constrained")
+    half_image_size = img_data.shape[0]/2
 
     for i, (im, rand_img, img_reverse, removed) in enumerate(zip(imgs, rand_imgs, imgs_reverse, nremoved)):
-        row = axes[:, i]
+        column = axes[:, i]
 
-        for a in row:
-            a.text(50, 240, 'Removed: {:.2f}'.format(removed / npixels), fontsize=13)
+        for a in column:
             a.axis('off')
 
-        row[0].set_title("$\delta$ distance: {:.2f}%".format(preds[i]))
-        row[0].imshow(im)
-        row[1].set_title("$\delta$ distance: {:.2f}%".format(preds_reverse[i]))
-        row[1].imshow(img_reverse)
-        row[2].set_title("$\delta$ distance: {:.2f}%".format(rand_preds[i]))
-        row[2].imshow(rand_img)
+        column[0].set_title("$\delta$ distance: {:.2f}%".format(preds[i]))
+        column[0].imshow(im)
+        column[1].set_title("$\delta$ distance: {:.2f}%".format(preds_reverse[i]))
+        column[1].imshow(img_reverse)
+        column[2].set_title("$\delta$ distance: {:.2f}%".format(rand_preds[i]))
+        column[2].imshow(rand_img)
+
+        column[2].text(half_image_size, img_data.shape[0] + 20,
+                       'Removed: {:.2f}'.format(removed / npixels),
+                       horizontalalignment='center', verticalalignment='center')
+
+    axes[0, 0].text(-20, half_image_size, 'nearing pixels first',
+                    horizontalalignment='center', verticalalignment='center', rotation=90)
+    axes[1, 0].text(-20, half_image_size, 'distancing pixels first',
+                    horizontalalignment='center', verticalalignment='center', rotation=90)
+    axes[2, 0].text(-20, half_image_size, 'random pixels',
+                    horizontalalignment='center', verticalalignment='center', rotation=90)
 
     fig.suptitle(f"Distance to image '{fn_tag}' after removing pixels", size=20)
-    fig.tight_layout()
-    plt.savefig(output_folder / f"figure_bee_vs_{fn_tag}_deleted_pixels.pdf", dpi=200)
+    fig.savefig(output_folder / f"figure_bee_vs_{fn_tag}_deleted_pixels.pdf", dpi=200)
+
+    if skip_deleter:
+        return
 
     # #### 4 - Evaluation and Visualization using Incremental Deletion
     # We now introduce our metric `Incremental_deletion` and call its visualize method to show the correctness of the explantion. Incremental deletion expects the model used for inference and `step` which defines the amount of pixels to delete per iteration.
@@ -200,22 +213,27 @@ def make_figures(reference_img_filename: str, output_folder: Path):
         elapsed_time = time.time() - start_time
         print(f"...done running deleter, took {elapsed_time} seconds")
 
+    fig, ax = plt.subplots(1, 2, figsize=(16,7), layout='constrained')
     _ = distance_metrics.visualize(salience_map,
                         utils.img_to_array(img) / 255.,
                         (np.array(results['salient_scores'][0]), np.array(results['random_scores'][0])),
                         ('MoRF', 'RaRF'),
-                        fontsize=12, show_plot=True,
+                        fontsize=12, show_plot=False,
+                        ax_image=ax[0], ax_deletion=ax[1],
                         save_to=output_folder / f"figure_bee_vs_{fn_tag}_MoRFvsRaRF.pdf")
+
+    fig, ax = plt.subplots(1, 2, figsize=(16,7), layout='constrained')
     _ = distance_metrics.visualize(salience_map,
                         utils.img_to_array(img) / 255.,
                         (np.array(results_reversed['salient_scores'][0]), np.array(results_reversed['random_scores'][0])),
                         ('LeRF', 'RaRF'),
-                        fontsize=12, show_plot=True,
+                        fontsize=12, show_plot=False,
+                        ax_image=ax[0], ax_deletion=ax[1],
                         save_to=(output_folder / f"figure_bee_vs_{fn_tag}_LeRFvsRaRF.pdf"))
 
 
 if __name__ == "__main__":
     output_folder = Path("figures_incremental_deletion")
     output_folder.mkdir(exist_ok=True, parents=True)
-    make_figures('fly.jpg', output_folder)
-    make_figures('bee2.jpg', output_folder)
+    make_figures('fly.jpg', output_folder, skip_deleter=True)
+    make_figures('bee2.jpg', output_folder, skip_deleter=True)
