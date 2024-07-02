@@ -83,6 +83,21 @@ class DistanceIncrementalDeletion(IncrementalDeletion):
         return scores
 
 
+def plot_deletion_curves(ax: plt.Axes, scores: tuple, labels: tuple, **kwargs):
+    for score, label in zip(scores, labels):
+        n_steps = score.size
+        x = np.arange(n_steps) / n_steps
+        curve, = ax.plot(x, score)
+        curve.set_label(label)
+        ax.set_xlim(0, 1.)
+        ax.fill_between(x, 0, score, alpha=.4)
+        ax.set_title('Model score after removing fraction of pixels', **kwargs)
+        ax.set_xlabel('Fraction of removed pixels', **kwargs)
+        ax.set_ylabel('Model score', **kwargs)
+
+    plt.legend()
+
+
 def visualize(salience_map: NDArray,
               image_data: NDArray,
               scores: tuple,
@@ -106,19 +121,7 @@ def visualize(salience_map: NDArray,
         fig = ax_image.get_figure()
     plot_image(salience_map, image_data, show_plot=False, ax=ax_image)
 
-    # plot deletion curves
-    for score, label in zip(scores, labels):
-        n_steps = score.size
-        x = np.arange(n_steps) / n_steps
-        curve, = ax_deletion.plot(x, score)
-        curve.set_label(label)
-        ax_deletion.set_xlim(0, 1.)
-        ax_deletion.fill_between(x, 0, score, alpha=.4)
-        ax_deletion.set_title('Model score after removing fraction of pixels', **kwargs)
-        ax_deletion.set_xlabel('Fraction of removed pixels', **kwargs)
-        ax_deletion.set_ylabel('Model score', **kwargs)
-
-    plt.legend()
+    plot_deletion_curves(ax_deletion, scores, labels, **kwargs)
 
     # Save or show
     if show_plot:
