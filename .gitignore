@@ -38,6 +38,7 @@ venv3
 
 **/output/**
 paper figuren/**
+benchmarking/paper_figures/**
 *.pdf
 *.html
 # SLURM log files:

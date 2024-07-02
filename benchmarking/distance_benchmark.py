@@ -21,7 +21,7 @@ class ImageVsImageCase:
     reference_image_file_name: str
 
 
-def run_image_vs_image_experiment(case: ImageVsImageCase, config: Config, output_folder: Path):
+def run_image_vs_image_experiment(case: ImageVsImageCase, config: Config, output_folder: Path, analyse=True):
     # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow 
     from utils import ImageNetModel
     model = ImageNetModel()
@@ -32,7 +32,7 @@ def run_image_vs_image_experiment(case: ImageVsImageCase, config: Config, output
     reference_image_file_name, reference_arr = load_img(reference_image_path, model.input_size)
     embedded_reference = model.run_on_batch(reference_arr)
 
-    run_and_analyse_explainer(case.name, config, embedded_reference, input_arr[0], input_image, model.run_on_batch, output_folder)
+    return run_and_analyse_explainer(case.name, config, embedded_reference, input_arr[0], input_image, model.run_on_batch, output_folder, analyse=analyse) + (input_image,)
 
 
 @dataclass
@@ -117,7 +117,7 @@ def run_explainer(case_name, config: Config, embedded_reference, input_arr, mode
 
 
 def run_and_analyse_explainer(case_name, config: Config, embedded_reference, input_arr, input_image, model, output_folder: Path,
-                              preprocess_function=None):
+                              preprocess_function=None, analyse=True):
     """
 
     :param case_name:
@@ -133,13 +133,15 @@ def run_and_analyse_explainer(case_name, config: Config, embedded_reference, inp
 
     saliency, explainer_neutral_value = run_explainer(case_name, config, embedded_reference, input_arr, model, output_folder, preprocess_function=preprocess_function)
 
-    central_value = explainer_neutral_value if config.manual_central_value is None else config.manual_central_value
-    fig, ax = plt.subplots(1, 1)
-    plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
-                               title=f'{case_name} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
-                               add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
-                               central_value=central_value)
-    plt.savefig(output_folder / 'saliency.png')
+    if analyse:
+        central_value = explainer_neutral_value if config.manual_central_value is None else config.manual_central_value
+        fig, ax = plt.subplots(1, 1)
+        plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
+                                title=f'{case_name} {config.mask_selection_range_min} - {config.mask_selection_range_min}',
+                                add_value_limits_to_title=True, vmin=saliency[0].min(), vmax=saliency[0].max(),
+                                central_value=central_value)
+        plt.savefig(output_folder / 'saliency.png')
+    return saliency, explainer_neutral_value
 
 
 def log_git_versions(output_folder):
