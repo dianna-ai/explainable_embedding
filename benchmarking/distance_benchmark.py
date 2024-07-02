@@ -67,20 +67,8 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
                               preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e.astype(np.uint8))) for e in x])
 
 
-def run_and_analyse_explainer(case_name, config: Config, embedded_reference, input_arr, input_image, model, output_folder: Path,
-                              preprocess_function=None):
-    """
-
-    :param case_name:
-    :param config:
-    :param embedded_reference:
-    :param input_arr: first argument to the model
-    :param input_image:
-    :param model: model or function
-    :param output_folder:
-    :param preprocess_function:
-    :return:
-    """
+def run_explainer(case_name, config: Config, embedded_reference, input_arr, model, output_folder: Path,
+                   preprocess_function=None):
     print(f"running explainer for case {case_name} with config:")
     print(config)
     set_all_the_seeds(config.random_seed)
@@ -124,6 +112,26 @@ def run_and_analyse_explainer(case_name, config: Config, embedded_reference, inp
         with open(statistics_filepath, 'w') as fh:
             fh.write(explainer.statistics)
         np.savetxt(explainer_neutral_value_filepath, [explainer_neutral_value])
+
+    return saliency, explainer_neutral_value
+
+
+def run_and_analyse_explainer(case_name, config: Config, embedded_reference, input_arr, input_image, model, output_folder: Path,
+                              preprocess_function=None):
+    """
+
+    :param case_name:
+    :param config:
+    :param embedded_reference:
+    :param input_arr: first argument to the model
+    :param input_image:
+    :param model: model or function
+    :param output_folder:
+    :param preprocess_function:
+    :return:
+    """
+
+    saliency, explainer_neutral_value = run_explainer(case_name, config, embedded_reference, input_arr, model, output_folder, preprocess_function=preprocess_function)
 
     central_value = explainer_neutral_value if config.manual_central_value is None else config.manual_central_value
     fig, ax = plt.subplots(1, 1)
@@ -241,3 +249,4 @@ if __name__ == '__main__':
 
     # for run_config in runs_20240227_moar_features_moar_masks:
     #    run_benchmark(run_config, image_image_cases=slice(0, 1), image_caption_cases=slice(1, 4, 2))
+    pass
