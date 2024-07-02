@@ -82,7 +82,7 @@ def generate_examples(img_data, salient_order, impute_value, model, embedded_ref
     return imgs, scores, n_removed
 
 
-def make_figures(reference_img_filename: str, output_folder: Path, skip_deleter=False):
+def make_figures(reference_img_filename: str, output_folder: Path):
     fn_tag = reference_img_filename.split('.')[0]
 
     np.random.seed(0)
@@ -182,9 +182,6 @@ def make_figures(reference_img_filename: str, output_folder: Path, skip_deleter=
     fig.suptitle(f"Distance to image '{fn_tag}' after removing pixels", size=20)
     fig.savefig(output_folder / f"figure_bee_vs_{fn_tag}_deleted_pixels.pdf", dpi=200)
 
-    if skip_deleter:
-        return
-
     # #### 4 - Evaluation and Visualization using Incremental Deletion
     # We now introduce our metric `Incremental_deletion` and call its visualize method to show the correctness of the explantion. Incremental deletion expects the model used for inference and `step` which defines the amount of pixels to delete per iteration.
 
@@ -213,27 +210,19 @@ def make_figures(reference_img_filename: str, output_folder: Path, skip_deleter=
         elapsed_time = time.time() - start_time
         print(f"...done running deleter, took {elapsed_time} seconds")
 
-    fig, ax = plt.subplots(1, 2, figsize=(16,7), layout='constrained')
-    _ = distance_metrics.visualize(salience_map,
-                        utils.img_to_array(img) / 255.,
-                        (np.array(results['salient_scores'][0]), np.array(results['random_scores'][0])),
-                        ('MoRF', 'RaRF'),
-                        fontsize=12, show_plot=False,
-                        ax_image=ax[0], ax_deletion=ax[1],
-                        save_to=output_folder / f"figure_bee_vs_{fn_tag}_MoRFvsRaRF.pdf")
+    fig, ax = plt.subplots(1, 1, figsize=(7, 7), layout='constrained')
+    distance_metrics.plot_deletion_curves(ax, (np.array(results['salient_scores'][0]), np.array(results['random_scores'][0])),
+                                          ('MoRF', 'RaRF'))
+    fig.savefig(output_folder / f"figure_bee_vs_{fn_tag}_MoRFvsRaRF.pdf")
 
-    fig, ax = plt.subplots(1, 2, figsize=(16,7), layout='constrained')
-    _ = distance_metrics.visualize(salience_map,
-                        utils.img_to_array(img) / 255.,
-                        (np.array(results_reversed['salient_scores'][0]), np.array(results_reversed['random_scores'][0])),
-                        ('LeRF', 'RaRF'),
-                        fontsize=12, show_plot=False,
-                        ax_image=ax[0], ax_deletion=ax[1],
-                        save_to=(output_folder / f"figure_bee_vs_{fn_tag}_LeRFvsRaRF.pdf"))
+    fig, ax = plt.subplots(1, 1, figsize=(7, 7), layout='constrained')
+    distance_metrics.plot_deletion_curves(ax, (np.array(results_reversed['salient_scores'][0]), np.array(results_reversed['random_scores'][0])),
+                                          ('LeRF', 'RaRF'))
+    fig.savefig(output_folder / f"figure_bee_vs_{fn_tag}_LeRFvsRaRF.pdf")
 
 
 if __name__ == "__main__":
     output_folder = Path("figures_incremental_deletion")
     output_folder.mkdir(exist_ok=True, parents=True)
-    make_figures('fly.jpg', output_folder, skip_deleter=True)
-    make_figures('bee2.jpg', output_folder, skip_deleter=True)
+    make_figures('fly.jpg', output_folder)
+    make_figures('bee2.jpg', output_folder)
