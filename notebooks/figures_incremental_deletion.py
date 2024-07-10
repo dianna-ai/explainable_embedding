@@ -27,7 +27,6 @@ warnings.filterwarnings('ignore') # disable warnings relateds to versions of tf
 
 class Model():
     def __init__(self):
-        K.set_learning_phase(0)
         self.model = ResNet50()
         self.input_size = (224, 224)
 

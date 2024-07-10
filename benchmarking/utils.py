@@ -19,7 +19,6 @@ class ImageNetModel:
     def __init__(self):
         from tensorflow.keras.applications.resnet50 import ResNet50
         from tensorflow.keras import backend as keras_backend
-        keras_backend.set_learning_phase(0)
         self.model = ResNet50()
         self.input_size = (224, 224)
 
