@@ -21,11 +21,17 @@ def make_number_of_masks_figure():
     fancy_figure_kwargs = {
         # much fun with DPI, column width and font size (and font type of course!)
         # ... once we know these things
+        'alpha': 0.7
     }
-    fig, ax = plt.subplots(3, 3, figsize=(10, 10), layout="constrained")
+    fig, ax = plt.subplots(3, 3, figsize=(12, 10), layout="constrained")
 
-    for key, config in number_of_masks_configs.items():
-        output_folder = pathlib.Path('paper_figures') / f'{config.experiment_name}'
+    base_output_folder = pathlib.Path('paper_figures')
+
+    image_size = 224
+    half_image_size = image_size / 2
+
+    for ix, config in enumerate(number_of_masks_configs.values()):
+        output_folder = base_output_folder / f'{config.experiment_name}'
         output_folder.mkdir(exist_ok=True, parents=True)
         config.to_yaml_file(output_folder / 'config.yml')
 
@@ -38,14 +44,25 @@ def make_number_of_masks_figure():
         case_folder.mkdir(exist_ok=True, parents=True)
         saliency, central_value, input_image = run_image_vs_image_experiment(imagenet_case, config, case_folder, analyse=False)
 
+        plot_saliency_map_on_image(input_image, saliency[0], ax=ax.flatten()[ix],
+                                   title="", add_value_limits_to_title=False,
+                                   vmin=saliency[0].min(), vmax=saliency[0].max(),
+                                   central_value=central_value, **fancy_figure_kwargs)
+    ax[2, 0].text(half_image_size, image_size + 20, 'random seed 1',
+                  horizontalalignment='center', verticalalignment='center')
+    ax[2, 1].text(half_image_size, image_size + 20, 'random seed 2',
+                  horizontalalignment='center', verticalalignment='center')
+    ax[2, 2].text(half_image_size, image_size + 20, 'random seed 3',
+                  horizontalalignment='center', verticalalignment='center')
 
-    # TODO: DOE DAADWERKELIJK ALLES OP 1 IMAGE!
+    ax[0, 0].text(-10, half_image_size, '100 masks',
+                  horizontalalignment='center', verticalalignment='center', rotation=90)
+    ax[1, 0].text(-10, half_image_size, '500 masks',
+                  horizontalalignment='center', verticalalignment='center', rotation=90)
+    ax[2, 0].text(-10, half_image_size, '2000 masks',
+                  horizontalalignment='center', verticalalignment='center', rotation=90)
 
-    plot_saliency_map_on_image(input_image, saliency[0], ax=ax,
-                               title="", add_value_limits_to_title=False,
-                               vmin=saliency[0].min(), vmax=saliency[0].max(),
-                               central_value=central_value, **fancy_figure_kwargs)
-    fig.savefig(output_folder / 'number_of_masks_convergence.pdf')
+    fig.savefig(base_output_folder / 'number_of_masks_convergence.pdf')
 
 
 if __name__ == '__main__':

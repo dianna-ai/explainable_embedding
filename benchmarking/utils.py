@@ -32,7 +32,7 @@ def class_name(idx):
 
 
 def plot_saliency_map_on_image(image, saliency, ax=None, vmin=None, vmax=None, title="Explanation",
-                               do_cbar=True, add_value_limits_to_title=False, central_value=None, **kwargs):
+                               do_cbar=True, add_value_limits_to_title=False, central_value=None, alpha=0.5, **kwargs):
     if ax is None:
         fig, ax = plt.subplots(1, 1)
     else:
@@ -61,7 +61,7 @@ def plot_saliency_map_on_image(image, saliency, ax=None, vmin=None, vmax=None, t
         vmax = central_value + radius
 
 
-    im = ax.imshow(saliency, cmap=cmap, alpha=0.5, vmin=vmin, vmax=vmax)
+    im = ax.imshow(saliency, cmap=cmap, alpha=alpha, vmin=vmin, vmax=vmax)
     if do_cbar:
         plt.colorbar(im, ax=ax)
     return fig
