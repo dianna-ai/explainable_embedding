@@ -5,7 +5,7 @@ import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-from distance_benchmark import run_image_vs_image_experiment, ImageVsImageCase, log_git_versions, plot_saliency_map_on_image
+from distance_benchmark import run_image_vs_image_experiment, ImageVsImageCase, log_git_versions, plot_saliency_map_on_image, run_image_captioning_experiment, ImageCaptioningCase
 from Config import original_config_options, Config
 
 
@@ -65,5 +65,51 @@ def make_number_of_masks_figure():
     fig.savefig(base_output_folder / 'number_of_masks_convergence.pdf')
 
 
+p_keep_configs = [dataclasses.replace(original_config_options,
+                                      experiment_name=f'p_keep_{p_keep}',
+                                      p_keep=p_keep
+                                      ) for p_keep in
+                  [0.1, 0.3, 0.5, 0.7, 0.9]]
+
+
+def make_p_keep_figures():
+    fancy_figure_kwargs = {
+        # much fun with DPI, column width and font size (and font type of course!)
+        # ... once we know these things
+        'alpha': 0.7
+    }
+
+    base_output_folder = pathlib.Path('paper_figures')
+
+    image_captioning_cases = [ImageCaptioningCase(name='bee image wrt a bee',
+                                                  input_image_file_name='bee.jpg',
+                                                  caption="a bee"),
+                              ImageCaptioningCase(name='car_vs_bicycle',
+                                                  input_image_file_name='car2.png',
+                                                  caption='a bicycle')
+    ]
+
+    for case in image_captioning_cases:
+        fig, ax = plt.subplots(1, 5, figsize=(12, 5), layout="constrained")
+
+        for ix, config in enumerate(p_keep_configs):
+            output_folder = base_output_folder / f'{config.experiment_name}'
+            output_folder.mkdir(exist_ok=True, parents=True)
+            config.to_yaml_file(output_folder / 'config.yml')
+
+            log_git_versions(output_folder)
+
+            case_folder = output_folder / f'image_captioning_{case.name}'
+            case_folder.mkdir(exist_ok=True, parents=True)
+            saliency, central_value, input_image = run_image_captioning_experiment(case, config, case_folder, analyse=False)
+
+            plot_saliency_map_on_image(input_image, saliency[0], ax=ax.flatten()[ix],
+                                       title="", add_value_limits_to_title=False,
+                                       vmin=saliency[0].min(), vmax=saliency[0].max(),
+                                       central_value=central_value, **fancy_figure_kwargs)
+
+        fig.savefig(base_output_folder / f'p_keep_{case.name}.pdf')
+
 if __name__ == '__main__':
-    make_number_of_masks_figure()
+    # make_number_of_masks_figure()
+    make_p_keep_figures()

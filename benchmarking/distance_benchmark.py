@@ -42,7 +42,7 @@ class ImageCaptioningCase:
     caption: str
 
 
-def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, output_folder: Path):
+def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, output_folder: Path, analyse=True):
     # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow
     import torch
     import clip
@@ -63,8 +63,19 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
             lst.append(model.encode_image(e_tensor).detach().cpu().numpy()[0])
         return lst
 
-    run_and_analyse_explainer(case.name, config, embedded_reference, input_arr[0], input_image, runner_function, output_folder,
-                              preprocess_function=lambda x: [preprocess(PIL.Image.fromarray(e.astype(np.uint8))) for e in x])
+    return run_and_analyse_explainer(
+        case.name,
+        config,
+        embedded_reference,
+        input_arr[0],
+        input_image,
+        runner_function,
+        output_folder,
+        preprocess_function=lambda x: [
+            preprocess(PIL.Image.fromarray(e.astype(np.uint8))) for e in x
+        ],
+        analyse=analyse,
+    ) + (input_image,)
 
 
 def run_explainer(case_name, config: Config, embedded_reference, input_arr, model, output_folder: Path,
