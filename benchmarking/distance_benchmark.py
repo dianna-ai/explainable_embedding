@@ -51,7 +51,8 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
     model, preprocess = clip.load("ViT-B/32", device=device)
 
     input_image_path = Path(__file__).parent.parent / 'data/images/' / case.input_image_file_name
-    input_image, input_arr = load_img(input_image_path, (224, 224))
+    # N.B.: we don't use the second output of load_img, that is preprocessed for resnet50!
+    input_image, _ = load_img(input_image_path, (224, 224))
     text = clip.tokenize([case.caption]).to(device)
     embedded_reference = model.encode_text(text).detach().cpu().numpy()
 
@@ -67,12 +68,12 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
         case.name,
         config,
         embedded_reference,
-        input_arr[0],
+        np.array(input_image),
         input_image,
         runner_function,
         output_folder,
         preprocess_function=lambda x: [
-            preprocess(PIL.Image.fromarray(e.astype(np.uint8))) for e in x
+            preprocess(PIL.Image.fromarray(e)) for e in x
         ],
         analyse=analyse,
     ) + (input_image,)
