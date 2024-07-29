@@ -9,6 +9,18 @@ from distance_benchmark import run_image_vs_image_experiment, ImageVsImageCase, 
 from Config import original_config_options, Config
 
 
+image_size = 224
+half_image_size = image_size / 2
+
+fancy_figure_kwargs = {
+    # much fun with DPI, column width and font size (and font type of course!)
+    # ... once we know these things
+    'alpha': 0.7
+}
+
+base_output_folder = pathlib.Path('paper_figures')
+
+
 number_of_masks_configs = {(n_mask, seed): dataclasses.replace(original_config_options,
                                                experiment_name=f'n_masks_{n_mask}_seed_{seed}',
                                                random_seed=seed,
@@ -18,17 +30,7 @@ number_of_masks_configs = {(n_mask, seed): dataclasses.replace(original_config_o
 
 
 def make_number_of_masks_figure():
-    fancy_figure_kwargs = {
-        # much fun with DPI, column width and font size (and font type of course!)
-        # ... once we know these things
-        'alpha': 0.7
-    }
     fig, ax = plt.subplots(3, 3, figsize=(12, 10), layout="constrained")
-
-    base_output_folder = pathlib.Path('paper_figures')
-
-    image_size = 224
-    half_image_size = image_size / 2
 
     for ix, config in enumerate(number_of_masks_configs.values()):
         output_folder = base_output_folder / f'{config.experiment_name}'
@@ -73,14 +75,6 @@ p_keep_configs = [dataclasses.replace(original_config_options,
 
 
 def make_p_keep_figures():
-    fancy_figure_kwargs = {
-        # much fun with DPI, column width and font size (and font type of course!)
-        # ... once we know these things
-        'alpha': 0.7
-    }
-
-    base_output_folder = pathlib.Path('paper_figures')
-
     image_captioning_cases = [ImageCaptioningCase(name='bee image wrt a bee',
                                                   input_image_file_name='bee.jpg',
                                                   caption="a bee"),
@@ -90,7 +84,7 @@ def make_p_keep_figures():
     ]
 
     for case in image_captioning_cases:
-        fig, ax = plt.subplots(1, 5, figsize=(12, 5), layout="constrained")
+        fig, ax = plt.subplots(1, 5, figsize=(12, 2), layout="constrained")
 
         for ix, config in enumerate(p_keep_configs):
             output_folder = base_output_folder / f'{config.experiment_name}'
@@ -103,10 +97,18 @@ def make_p_keep_figures():
             case_folder.mkdir(exist_ok=True, parents=True)
             saliency, central_value, input_image = run_image_captioning_experiment(case, config, case_folder, analyse=False)
 
-            plot_saliency_map_on_image(input_image, saliency[0], ax=ax.flatten()[ix],
+            ax_ix = ax.flatten()[ix]
+            print(saliency[0].min(), saliency[0].max())
+            plot_saliency_map_on_image(input_image, saliency[0], ax=ax_ix,
                                        title="", add_value_limits_to_title=False,
                                        vmin=saliency[0].min(), vmax=saliency[0].max(),
                                        central_value=central_value, **fancy_figure_kwargs)
+            if ix == 0:
+                ax_ix.text(half_image_size, image_size + 20, f'$p_\\mathrm{{keep}}$: {config.p_keep}',
+                        horizontalalignment='center', verticalalignment='center')
+            else:
+                ax_ix.text(half_image_size, image_size + 20, f'{config.p_keep}',
+                        horizontalalignment='center', verticalalignment='center')
 
         fig.savefig(base_output_folder / f'p_keep_{case.name}.pdf')
 
