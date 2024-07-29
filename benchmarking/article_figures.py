@@ -9,6 +9,10 @@ from distance_benchmark import run_image_vs_image_experiment, ImageVsImageCase, 
 from Config import original_config_options, Config
 
 
+imagenet_case = ImageVsImageCase(name='bee_vs_fly',
+                                 input_image_file_name='bee.jpg',
+                                 reference_image_file_name='fly.jpg')
+
 image_size = 224
 half_image_size = image_size / 2
 
@@ -39,9 +43,6 @@ def make_number_of_masks_figure():
 
         log_git_versions(output_folder)
 
-        imagenet_case = ImageVsImageCase(name='bee_vs_fly',
-                                        input_image_file_name='bee.jpg',
-                                        reference_image_file_name='fly.jpg')
         case_folder = output_folder / f'image_vs_image_{imagenet_case.name}'
         case_folder.mkdir(exist_ok=True, parents=True)
         saliency, central_value, input_image = run_image_vs_image_experiment(imagenet_case, config, case_folder, analyse=False)
@@ -112,6 +113,90 @@ def make_p_keep_figures():
 
         fig.savefig(base_output_folder / f'p_keep_{case.name}.pdf')
 
+
+feature_res_configs = [dataclasses.replace(original_config_options,
+                                           experiment_name=f'feature_res_{feature_res}',
+                                           feature_res=feature_res
+                                           ) for feature_res in
+                       [2, 4, 6, 8, 12, 16, 24, 32, 64, 128]]
+
+
+def make_feature_res_figure():
+    fig, ax = plt.subplots(2, 5, figsize=(12, 4), layout="constrained")
+
+    for ix, config in enumerate(feature_res_configs):
+        output_folder = base_output_folder / f'{config.experiment_name}'
+        output_folder.mkdir(exist_ok=True, parents=True)
+        config.to_yaml_file(output_folder / 'config.yml')
+
+        log_git_versions(output_folder)
+
+        case_folder = output_folder / f'image_vs_image_{imagenet_case.name}'
+        case_folder.mkdir(exist_ok=True, parents=True)
+        saliency, central_value, input_image = run_image_vs_image_experiment(imagenet_case, config, case_folder, analyse=False)
+
+        ax_ix = ax.flatten()[ix]
+
+        plot_saliency_map_on_image(input_image, saliency[0], ax=ax_ix,
+                                   title="", add_value_limits_to_title=False,
+                                   vmin=saliency[0].min(), vmax=saliency[0].max(),
+                                   central_value=central_value, **fancy_figure_kwargs)
+        if ix == 0:
+            ax_ix.text(half_image_size, image_size + 20, f'feature resolution: {config.feature_res}',
+                       horizontalalignment='center', verticalalignment='center')
+        else:
+            ax_ix.text(half_image_size, image_size + 20, f'{config.feature_res}',
+                       horizontalalignment='center', verticalalignment='center')
+
+    fig.savefig(base_output_folder / 'feature_res_increase.pdf')
+
+
+feature_res_nmasks_configs = [dataclasses.replace(original_config_options,
+                                           experiment_name=f'feature_res_nmasks_{feature_res}_features_{N_masks}_masks',
+                                           feature_res=feature_res,
+                                           number_of_masks=N_masks,
+                                           ) for feature_res, N_masks in
+                                          [(16, 2000), (16, 4000), (16, 8000),
+                                           (32, 2000), (32, 8000), (32, 32000)]]
+
+
+def make_feature_res_nmasks_figure():
+    fig, ax = plt.subplots(2, 3, figsize=(12, 7), layout="constrained")
+
+    for ix, config in enumerate(feature_res_nmasks_configs):
+        output_folder = base_output_folder / f'{config.experiment_name}'
+        output_folder.mkdir(exist_ok=True, parents=True)
+        config.to_yaml_file(output_folder / 'config.yml')
+
+        log_git_versions(output_folder)
+
+        case_folder = output_folder / f'image_vs_image_{imagenet_case.name}'
+        case_folder.mkdir(exist_ok=True, parents=True)
+        saliency, central_value, input_image = run_image_vs_image_experiment(imagenet_case, config, case_folder, analyse=False)
+
+        ax_ix = ax.flatten()[ix]
+
+        plot_saliency_map_on_image(input_image, saliency[0], ax=ax_ix,
+                                   title="", add_value_limits_to_title=False,
+                                   vmin=saliency[0].min(), vmax=saliency[0].max(),
+                                   central_value=central_value, **fancy_figure_kwargs)
+        if ix == 0:
+            ax_ix.text(half_image_size, image_size + 20, f'number of masks: {config.number_of_masks}',
+                       horizontalalignment='center', verticalalignment='center')
+        else:
+            ax_ix.text(half_image_size, image_size + 20, f'{config.number_of_masks}',
+                       horizontalalignment='center', verticalalignment='center')
+
+    ax[0, 0].text(-10, half_image_size, 'feature res.: 16',
+                  horizontalalignment='center', verticalalignment='center', rotation=90)
+    ax[1, 0].text(-10, half_image_size, 'feature res.: 32',
+                  horizontalalignment='center', verticalalignment='center', rotation=90)
+
+    fig.savefig(base_output_folder / 'feature_res_number_of_masks_noise_reduction.pdf')
+
+
 if __name__ == '__main__':
     # make_number_of_masks_figure()
-    make_p_keep_figures()
+    # make_p_keep_figures()
+    make_feature_res_figure()
+    make_feature_res_nmasks_figure()
