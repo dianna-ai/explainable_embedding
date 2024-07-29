@@ -10,7 +10,7 @@ from distance_explainer import DistanceExplainer
 from matplotlib import pyplot as plt
 
 from Config import Config
-from distance_benchmark_configs import reruns_20240604
+from distance_benchmark_configs import runs_20240227_moar_features_moar_masks
 from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
@@ -261,6 +261,6 @@ if __name__ == '__main__':
     #     run_uid = str(path).split("_")[-1]
     #     run_benchmark(run_config, run_uid=run_uid)
 
-    # for run_config in runs_20240227_moar_features_moar_masks:
-    #    run_benchmark(run_config, image_image_cases=slice(0, 1), image_caption_cases=slice(1, 4, 2))
-    pass
+    for run_config in runs_20240227_moar_features_moar_masks:
+        run_benchmark(run_config, image_image_cases=slice(0, 0), image_caption_cases=slice(1, 4, 2))
+    # pass
