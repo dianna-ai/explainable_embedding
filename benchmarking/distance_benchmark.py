@@ -10,9 +10,9 @@ import numpy as np
 from distance_explainer import DistanceExplainer
 from matplotlib import pyplot as plt
 
-from Config import Config
-from distance_benchmark_configs import runs_20240227_moar_features_moar_masks
-from utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
+from .Config import Config
+from .distance_benchmark_configs import runs_20240227_moar_features_moar_masks
+from .utils import load_img, plot_saliency_map_on_image, set_all_the_seeds
 
 
 @dataclass
@@ -24,7 +24,7 @@ class ImageVsImageCase:
 
 def run_image_vs_image_experiment(case: ImageVsImageCase, config: Config, output_folder: Path, analyse=True):
     # N.B.: imports must be here to make sure the GPU is used in multiprocessing mode, especially for tensorflow 
-    from utils import ImageNetModel
+    from .utils import ImageNetModel
     model = ImageNetModel()
 
     input_image_path = Path(__file__).parent.parent / 'data/images/' / case.input_image_file_name
