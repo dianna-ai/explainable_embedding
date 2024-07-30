@@ -115,3 +115,4 @@ reruns_20240604 = [dataclasses.replace(original_config_options,
                               (0.0, 0.0, 0.5, 1.0),
                           ]]
 
+all_configs = number_of_masks_configs + p_keep_configs + mask_threshold_configs + mask_one_sided_configs + mask_nonselect_configs + feature_res_configs + runs_20240227_moar_features_moar_masks
