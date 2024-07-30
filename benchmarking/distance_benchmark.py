@@ -251,8 +251,9 @@ if __name__ == '__main__':
     # import dataclasses
     #run_benchmark(dataclasses.replace(test_config, number_of_masks=500))
 
+    run_uid = int(time.time())  # one uid to be able to group them all together
     for run_config in runs_20240227:
-        run_benchmark(run_config, image_image_cases=slice(0, 0))
+        run_benchmark(run_config, image_image_cases=slice(0, 0), run_uid=run_uid)
 
     # for run_config in runs_20240227_moar_features_moar_masks:
     #     run_benchmark(run_config, image_image_cases=slice(0, 0), image_caption_cases=slice(1, 4, 2))
