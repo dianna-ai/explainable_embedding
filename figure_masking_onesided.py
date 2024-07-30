@@ -57,7 +57,7 @@ mask_one_sided_allneg_config = dataclasses.replace(original_config_options,
 
 
 def make_figure():
-    fig, ax = plt.subplots(2, 5, figsize=(12, 4), layout="constrained")
+    fig, ax = plt.subplots(2, 5, figsize=(12, 3.9), layout="constrained")
 
     for ix, config in enumerate(mask_one_sided_configs):
         output_folder = base_output_folder / f'{config.experiment_name}'
@@ -78,15 +78,15 @@ def make_figure():
                                    central_value=central_value, **fancy_figure_kwargs)
         
         prepend = ""
-        selected = (config.mask_selection_negative_range_max - config.mask_selection_negative_range_min + config.mask_selection_range_max - config.mask_selection_range_min) * 100
+        selected = round((config.mask_selection_negative_range_max - config.mask_selection_negative_range_min + config.mask_selection_range_max - config.mask_selection_range_min) * 100)
         if ix == 0:
             prepend = "masks selected: "
         ax_ix.text(half_image_size, image_size + 20, f'{prepend}{selected}%',
                    horizontalalignment='center', verticalalignment='center')
 
-    ax[0, 0].text(-10, half_image_size, 'top "distancing" selected',
+    ax[0, 0].text(-10, half_image_size, 'top "closing" selected',
                   horizontalalignment='center', verticalalignment='center', rotation=90)
-    ax[1, 0].text(-10, half_image_size, 'top "closing" selected',
+    ax[1, 0].text(-10, half_image_size, 'top "distancing" selected',
                   horizontalalignment='center', verticalalignment='center', rotation=90)
 
     fig.savefig(base_output_folder / 'masking_onesided.pdf')
