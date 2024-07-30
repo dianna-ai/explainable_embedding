@@ -2,6 +2,7 @@ import pathlib
 import time
 from dataclasses import dataclass
 from pathlib import Path
+import numpy.typing
 
 import PIL.Image
 import git
@@ -80,7 +81,7 @@ def run_image_captioning_experiment(case: ImageCaptioningCase, config: Config, o
 
 
 def run_explainer(case_name, config: Config, embedded_reference, input_arr, model, output_folder: Path,
-                   preprocess_function=None):
+                   preprocess_function=None) -> tuple[numpy.typing.NDArray, float]:
     print(f"running explainer for case {case_name} with config:")
     print(config)
     set_all_the_seeds(config.random_seed)
@@ -111,7 +112,7 @@ def run_explainer(case_name, config: Config, embedded_reference, input_arr, mode
         and explainer_neutral_value_filepath.exists()
     ):
         saliency = np.load(saliency_filepath)
-        explainer_neutral_value = np.loadtxt(explainer_neutral_value_filepath)
+        explainer_neutral_value = float(np.loadtxt(explainer_neutral_value_filepath))
     else:
         saliency, explainer_neutral_value = explainer.explain_image_distance(model, input_arr, embedded_reference)
 
@@ -129,7 +130,7 @@ def run_explainer(case_name, config: Config, embedded_reference, input_arr, mode
 
 
 def run_and_analyse_explainer(case_name, config: Config, embedded_reference, input_arr, input_image, model, output_folder: Path,
-                              preprocess_function=None, analyse=True):
+                              preprocess_function=None, analyse=True) -> tuple[numpy.typing.NDArray, float]:
     """
 
     :param case_name:
