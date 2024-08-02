@@ -164,6 +164,58 @@ def log_git_versions(output_folder):
         fh.write(f'explainable_embedding: {explainable_embedding_sha}')
         #fh.write(f'dianna: {dianna_sha}')
 
+imagenet_cases = [ImageVsImageCase(name='bee_vs_fly',
+                                    input_image_file_name='bee.jpg',
+                                    reference_image_file_name='fly.jpg'),
+                    ImageVsImageCase(name='labradoodles',
+                                    input_image_file_name='labradoodle1.jpg',
+                                    reference_image_file_name='labradoodle2.jpg'),
+                    ImageVsImageCase(name='dogcar_vs_car',
+                                    input_image_file_name='dogcar.jpg',
+                                    reference_image_file_name='car1.jpg'),
+                    ImageVsImageCase(name='dogcar_vs_dog',
+                                    input_image_file_name='dogcar.jpg',
+                                    reference_image_file_name='labradoodle1.jpg'),
+                    ImageVsImageCase(name='flower_vs_car',
+                                    input_image_file_name='flower.jpg',
+                                    reference_image_file_name='car1.jpg'),
+                    ImageVsImageCase(name='car_vs_bike',
+                                    input_image_file_name='car2.png',
+                                    reference_image_file_name='bike.jpg')]
+
+image_captioning_cases = [
+    ImageCaptioningCase(name='bee image wrt a bee sitting on a flower',
+                        input_image_file_name='bee.jpg',
+                        caption="a bee sitting on a flower"),
+    ImageCaptioningCase(name='bee image wrt a bee',
+                        input_image_file_name='bee.jpg',
+                        caption="a bee"),
+    ImageCaptioningCase(name='bee image wrt an image of a bee',
+                        input_image_file_name='bee.jpg',
+                        caption="an image of a bee"),
+    ImageCaptioningCase(name='bee image wrt a fly',
+                        input_image_file_name='bee.jpg',
+                        caption="a fly"),
+    ImageCaptioningCase(name='bee image wrt a flower',
+                        input_image_file_name='bee.jpg',
+                        caption="a flower"),
+    ImageCaptioningCase(name='labradoodles',
+                        input_image_file_name='labradoodle1.jpg',
+                        caption='a labradoodle'),
+    ImageCaptioningCase(name='dogcar_vs_car',
+                        input_image_file_name='dogcar.jpg',
+                        caption='a car'),
+    ImageCaptioningCase(name='dogcar_vs_dog',
+                        input_image_file_name='dogcar.jpg',
+                        caption='a dog'),
+    ImageCaptioningCase(name='flower_vs_car',
+                        input_image_file_name='flower.jpg',
+                        caption='a car'),
+    ImageCaptioningCase(name='car_vs_bicycle',
+                        input_image_file_name='car2.png',
+                        caption='a bicycle')
+]
+
 
 def run_benchmark(config, run_uid=None, image_image_cases=slice(None), image_caption_cases=slice(None)):
     if run_uid is None:
@@ -175,25 +227,6 @@ def run_benchmark(config, run_uid=None, image_image_cases=slice(None), image_cap
 
     log_git_versions(output_folder)
 
-    imagenet_cases = [ImageVsImageCase(name='bee_vs_fly',
-                                       input_image_file_name='bee.jpg',
-                                       reference_image_file_name='fly.jpg'),
-                      ImageVsImageCase(name='labradoodles',
-                                       input_image_file_name='labradoodle1.jpg',
-                                       reference_image_file_name='labradoodle2.jpg'),
-                      ImageVsImageCase(name='dogcar_vs_car',
-                                       input_image_file_name='dogcar.jpg',
-                                       reference_image_file_name='car1.jpg'),
-                      ImageVsImageCase(name='dogcar_vs_dog',
-                                       input_image_file_name='dogcar.jpg',
-                                       reference_image_file_name='labradoodle1.jpg'),
-                      ImageVsImageCase(name='flower_vs_car',
-                                       input_image_file_name='flower.jpg',
-                                       reference_image_file_name='car1.jpg'),
-                      ImageVsImageCase(name='car_vs_bike',
-                                       input_image_file_name='car2.png',
-                                       reference_image_file_name='bike.jpg')]
-    # imagenet_cases = []
     for imagenet_case in imagenet_cases[image_image_cases]:
         case_folder = output_folder / 'image_vs_image' / imagenet_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
@@ -203,38 +236,6 @@ def run_benchmark(config, run_uid=None, image_image_cases=slice(None), image_cap
         # process_eval.join()
         run_image_vs_image_experiment(imagenet_case, config, case_folder)
 
-    image_captioning_cases = [
-        ImageCaptioningCase(name='bee image wrt a bee sitting on a flower',
-                            input_image_file_name='bee.jpg',
-                            caption="a bee sitting on a flower"),
-        ImageCaptioningCase(name='bee image wrt a bee',
-                            input_image_file_name='bee.jpg',
-                            caption="a bee"),
-        ImageCaptioningCase(name='bee image wrt an image of a bee',
-                            input_image_file_name='bee.jpg',
-                            caption="an image of a bee"),
-        ImageCaptioningCase(name='bee image wrt a fly',
-                            input_image_file_name='bee.jpg',
-                            caption="a fly"),
-        ImageCaptioningCase(name='bee image wrt a flower',
-                            input_image_file_name='bee.jpg',
-                            caption="a flower"),
-        ImageCaptioningCase(name='labradoodles',
-                            input_image_file_name='labradoodle1.jpg',
-                            caption='a labradoodle'),
-        ImageCaptioningCase(name='dogcar_vs_car',
-                            input_image_file_name='dogcar.jpg',
-                            caption='a car'),
-        ImageCaptioningCase(name='dogcar_vs_dog',
-                            input_image_file_name='dogcar.jpg',
-                            caption='a dog'),
-        ImageCaptioningCase(name='flower_vs_car',
-                            input_image_file_name='flower.jpg',
-                            caption='a car'),
-        ImageCaptioningCase(name='car_vs_bicycle',
-                            input_image_file_name='car2.png',
-                            caption='a bicycle')
-    ]
     for image_captioning_case in image_captioning_cases[image_caption_cases]:
         case_folder = output_folder / 'image_captioning' / image_captioning_case.name
         case_folder.mkdir(exist_ok=True, parents=True)
