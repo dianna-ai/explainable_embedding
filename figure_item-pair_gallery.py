@@ -46,7 +46,7 @@ def make_image_vs_image_figure():
 
 
 def make_image_vs_caption_figure():
-    fig, ax = plt.subplots(2, 5, figsize=(12, 4), layout="constrained")
+    fig, ax = plt.subplots(4, 3, figsize=(12, 14), layout="constrained")
 
     for ix, case in enumerate(image_captioning_cases):
         output_folder = base_output_folder / f'{config.experiment_name}'
@@ -74,5 +74,5 @@ def make_image_vs_caption_figure():
 
 
 if __name__ == '__main__':
-    make_image_vs_image_figure()
+    # make_image_vs_image_figure()
     make_image_vs_caption_figure()
