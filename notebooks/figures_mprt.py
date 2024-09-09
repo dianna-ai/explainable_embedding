@@ -1,5 +1,7 @@
+import json
 import pickle
 
+# sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import distance_explainer
 
 from tensorflow.keras.applications.vgg16 import VGG16
@@ -32,7 +34,7 @@ def main(n_masks=1000):
     reference_img, reference_arr = load_img(Path('data/' + reference_title + '.jpg'), (224, 224, 3))
     embedded_reference = model(reference_arr)
 
-    masks = distance_explainer.generate_masks_for_images(bee_arr.shape[1:3], n_masks, 0.5, 8)
+    masks = distance_explainer.generate_interpolated_float_masks_for_image(bee_arr.shape[1:3], 0.5, n_masks, 8)
 
     channel_first = True  # transpose to always have channels first (pytorch style)
 
@@ -91,7 +93,7 @@ def main(n_masks=1000):
             ax = flatten(axs)[ax_ix]
             ax.imshow(attribution_maps[layer], cmap='Greys')
             ax.text(224/2, 224 + 20,
-                           ax_ix,
+                           'original' if ax_ix == 0 else ax_ix,
                            horizontalalignment='center', verticalalignment='center', fontsize=20)
 
         [ax_ix.axis('off') for ax_ix in flatten(axs)]
@@ -101,17 +103,21 @@ def main(n_masks=1000):
         plt.close(fig)
 
 
-def create_attribution_maps(attribution_maps_path, bee_arr, channel_first, explain, model, layer_order):
+def create_attribution_maps(attribution_maps_path, bee_arr, channel_first, explain, model, layer_order, a_batch=None):
     onze_MPRT = NicePicturesMPRT(layer_order=layer_order)
+    mprt_scores = []
     for i in range(1):
-        onze_MPRT(
+        mprt_score = onze_MPRT(
             model=model,
             x_batch=(bee_arr.transpose([0, 3, 1, 2])),
             y_batch=[0],
-            a_batch=None,
+            a_batch=a_batch,
             channel_first=channel_first,
             explain_func=explain,
         )
+        mprt_scores.append(mprt_score)
+        with open(attribution_maps_path.with_suffix('.json'), 'w') as f:
+            json.dump(mprt_scores, f)
     axis_0 = 0
     n_layers = range(len(onze_MPRT.a_instance_perturbed_output))
     attribution_maps = {layer: onze_MPRT.a_instance_perturbed_output[layer][axis_0] for layer in n_layers}

@@ -70,7 +70,8 @@ class NicePicturesMPRT(MPRT):
             for l_ix, (layer_name, random_layer_model) in enumerate(
                 model.get_random_layer_generator(order=self.layer_order, seed=self.seed)
             ):
-                pbar.desc = layer_name
+                pbar.desc = f"{l_ix} {layer_name}"
+                print(f"{l_ix} {layer_name}")
 
                 if l_ix == 0:
 
@@ -149,4 +150,4 @@ class NicePicturesMPRT(MPRT):
         # Return all_evaluation_scores according to Quantus.
         self.all_evaluation_scores.append(self.evaluation_scores)
 
-        return self.evaluation_scores
+        return self.all_evaluation_scores
