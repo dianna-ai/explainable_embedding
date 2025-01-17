@@ -46,7 +46,10 @@ def make_image_vs_image_figure():
 
 
 def make_image_vs_caption_figure():
-    fig, ax = plt.subplots(4, 3, figsize=(12, 14), layout="constrained")
+    rows = 4
+    cols = 3
+    fig, ax = plt.subplots(rows, cols, figsize=(12, 14), layout="constrained")
+    panels = rows * cols
 
     for ix, case in enumerate(image_captioning_cases):
         output_folder = base_output_folder / f'{config.experiment_name}'
@@ -68,6 +71,9 @@ def make_image_vs_caption_figure():
     
         ax_ix.text(half_image_size, image_size + 20, case.name,
                     horizontalalignment='center', verticalalignment='center')
+    
+    for ix in range(len(image_captioning_cases) - 1, panels):
+        ax.flatten()[ix].set_axis_off()
 
     fig.savefig(base_output_folder / 'item-pair_image_vs_caption_gallery.pdf')
 
