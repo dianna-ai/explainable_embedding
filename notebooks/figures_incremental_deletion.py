@@ -171,11 +171,11 @@ def make_figures(reference_img_filename: str, output_folder: Path):
                        'Removed: {:.2f}'.format(removed / npixels),
                        horizontalalignment='center', verticalalignment='center')
 
-    axes[0, 0].text(-20, half_image_size, 'nearing pixels first',
+    axes[0, 0].text(-20, half_image_size, 'LoDF',
                     horizontalalignment='center', verticalalignment='center', rotation=90)
-    axes[1, 0].text(-20, half_image_size, 'distancing pixels first',
+    axes[1, 0].text(-20, half_image_size, 'HiDF',
                     horizontalalignment='center', verticalalignment='center', rotation=90)
-    axes[2, 0].text(-20, half_image_size, 'random pixels',
+    axes[2, 0].text(-20, half_image_size, 'random',
                     horizontalalignment='center', verticalalignment='center', rotation=90)
 
     fig.suptitle(f"Distance to image '{fn_tag}' after removing pixels", size=20)
@@ -211,13 +211,13 @@ def make_figures(reference_img_filename: str, output_folder: Path):
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 7), layout='constrained')
     distance_metrics.plot_deletion_curves(ax, (np.array(results['salient_scores'][0]), np.array(results['random_scores'][0])),
-                                          ('MoRF', 'RaRF'))
-    fig.savefig(output_folder / f"figure_bee_vs_{fn_tag}_MoRFvsRaRF.pdf")
+                                          ('LoDF', 'random'))
+    fig.savefig(output_folder / f"figure_bee_vs_{fn_tag}_LoDFvsrandom.pdf")
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 7), layout='constrained')
     distance_metrics.plot_deletion_curves(ax, (np.array(results_reversed['salient_scores'][0]), np.array(results_reversed['random_scores'][0])),
-                                          ('LeRF', 'RaRF'))
-    fig.savefig(output_folder / f"figure_bee_vs_{fn_tag}_LeRFvsRaRF.pdf")
+                                          ('HiDF', 'random'))
+    fig.savefig(output_folder / f"figure_bee_vs_{fn_tag}_HiDFvsrandom.pdf")
 
 
 if __name__ == "__main__":
